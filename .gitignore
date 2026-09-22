@@ -1,0 +1,14 @@
+# 原始扫描件：保留在本地即可，构建正文只依赖 source/handbook-raw.txt
+source/handbook-original.doc
+
+# 系统与编辑器产生的垃圾
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Python 缓存
+__pycache__/
+*.pyc

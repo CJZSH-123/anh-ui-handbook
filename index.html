@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>安徽大学学生手册 · 全文查询</title>
+<link rel="stylesheet" href="assets/styles.css?v=3">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="打开目录" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">安</div>
+    <div class="brand-text">
+      <h1>安徽大学学生手册</h1>
+      <p id="meta-line">正在载入…</p>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <form class="search" id="search-form" role="search" autocomplete="off">
+      <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="8.5" cy="8.5" r="5.5"></circle><path d="M12.8 12.8 17 17"></path>
+      </svg>
+      <input id="q" name="q" type="search" placeholder="搜索关键词，如：转专业、奖学金、重修、请假"
+             autocomplete="off" spellcheck="false" aria-label="搜索学生手册">
+      <span class="search-count" id="search-count" hidden></span>
+      <button type="button" class="clear-btn" id="clear-btn" aria-label="清空搜索" hidden>&times;</button>
+      <kbd class="hint-key">Ctrl K</kbd>
+    </form>
+    <div class="hits" id="hits" hidden></div>
+  </div>
+
+  <button class="help-btn" id="help-btn" aria-label="使用说明" title="使用说明">?</button>
+</header>
+
+<div class="where" id="where" hidden><span id="where-text"></span></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="tabs" role="tablist">
+      <button class="tab is-active" id="tab-toc" data-tab="toc" role="tab" aria-selected="true">目录</button>
+      <button class="tab" id="tab-marks" data-tab="marks" role="tab" aria-selected="false">
+        书签<span class="tab-badge" id="mark-count" hidden>0</span>
+      </button>
+    </div>
+    <nav class="pane" id="pane-toc" aria-label="目录"></nav>
+    <div class="pane" id="pane-marks" hidden></div>
+  </aside>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main">
+    <article class="doc" id="doc"></article>
+  </main>
+</div>
+
+<button class="to-top" id="to-top" hidden>回到顶部</button>
+
+<div class="intro" id="intro" hidden>
+  <div class="intro-scrim" data-intro-close></div>
+  <section class="intro-card" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <button class="intro-x" id="intro-x" aria-label="关闭介绍">&times;</button>
+
+    <p class="intro-credit">本网页由从今至岁寒独立开发</p>
+    <h2 class="intro-title" id="intro-title">使用说明</h2>
+    <p class="intro-sub">《安徽大学学生手册》全文查询 · 下滑即可开始阅读</p>
+
+    <ul class="intro-list">
+      <li>
+        <span class="intro-ico">目录</span>
+        <div>
+          <b>点标题直接跳转</b>
+          <p>左侧按手册原有的 10 个部分、52 个条目排列。点任意标题，正文就跳到那一段，
+             顶部会一直显示你当前看到的是哪份文件、第几条。</p>
+        </div>
+      </li>
+      <li>
+        <span class="intro-ico">搜索</span>
+        <div>
+          <b>关键词搜索</b>
+          <p>想查什么直接往上方输入框里打，下面会列出每一处命中的位置和上下文，
+             点一条就跳过去。快捷键 <kbd>Ctrl</kbd>+<kbd>K</kbd>（Mac 用 <kbd>⌘</kbd>+<kbd>K</kbd>）或 <kbd>/</kbd>。</p>
+        </div>
+      </li>
+      <li>
+        <span class="intro-ico">书签</span>
+        <div>
+          <b>给常看的条文起个名字</b>
+          <p>点一下正文任意一段，会出现「书签」按钮，起个自己的名字保存。
+             左侧切到「书签」页签，可以改名、删除、一键跳回。</p>
+        </div>
+      </li>
+      <li>
+        <span class="intro-ico">复制</span>
+        <div>
+          <b>连位置一起复制走</b>
+          <p>同样是点一下段落，点「复制」，会把出处和原文一起复制，
+             方便粘到备忘录或聊天里。</p>
+        </div>
+      </li>
+    </ul>
+
+    <p class="intro-foot">
+      手机上「书签 / 复制」按钮点一下段落才出现，平时不会挡住正文；书签只保存在这台设备的浏览器里，
+      换设备或清理浏览器数据会丢失。内容来自《学生手册电子版.doc》，扫描识别稿可能有个别字词误差，
+      正式引用请以印发版本为准。
+    </p>
+
+    <div class="intro-actions">
+      <button class="btn primary" id="intro-start">开始使用</button>
+    </div>
+  </section>
+</div>
+
+<div class="popover" id="popover" hidden>
+  <p class="popover-title">加书签</p>
+  <input id="popover-input" type="text" maxlength="40" placeholder="给这个位置起个名字">
+  <p class="popover-where" id="popover-where"></p>
+  <div class="popover-actions">
+    <button class="btn primary" id="popover-save">保存</button>
+    <button class="btn" id="popover-cancel">取消</button>
+  </div>
+</div>
+
+<div class="intro" id="backup" hidden>
+  <div class="intro-scrim" id="backup-scrim"></div>
+  <section class="intro-card" role="dialog" aria-modal="true" aria-labelledby="backup-title">
+    <button class="intro-x" id="backup-x" aria-label="关闭">&times;</button>
+    <h2 class="intro-title" id="backup-title">书签备份</h2>
+    <p class="intro-sub" id="backup-sub"></p>
+    <textarea class="backup-text" id="backup-text"></textarea>
+    <div class="intro-actions">
+      <button class="btn" id="backup-cancel">关闭</button>
+      <button class="btn primary" id="backup-do">复制</button>
+    </div>
+  </section>
+</div>
+
+<p class="footnote" id="footnote"></p>
+
+<script src="data/handbook.js?v=3"></script>
+<script src="assets/app.js?v=3"></script>
+</body>
+</html>

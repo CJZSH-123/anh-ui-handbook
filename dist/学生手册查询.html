@@ -1,0 +1,1992 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>安徽大学学生手册 · 全文查询</title>
+<style>
+/* ---------------------------------------------------------------- tokens */
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --ink: #16181d;
+  --ink-soft: #59616f;
+  --ink-faint: #8b93a1;
+  --line: #e3e6ec;
+  --accent: #1f4e8c;
+  --accent-soft: #e9eff9;
+  --mark: #ffe9a8;
+  --mark-strong: #ffd166;
+  --danger: #b4322c;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 10px 28px rgb(16 24 40 / 8%);
+  --topbar-h: 68px;
+  --sans: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans SC",
+          system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131519;
+    --panel: #1b1e24;
+    --ink: #e8eaee;
+    --ink-soft: #a4acba;
+    --ink-faint: #7c8595;
+    --line: #2b3038;
+    --accent: #82abe4;
+    --accent-soft: #1e2a3c;
+    --mark: #6d5c1f;
+    --mark-strong: #8b7427;
+    --danger: #e0796f;
+    --shadow: 0 1px 2px rgb(0 0 0 / 45%), 0 10px 30px rgb(0 0 0 / 35%);
+  }
+}
+
+* { box-sizing: border-box; }
+
+/* 需要让元素自带的 hidden 属性始终生效（否则被下面的 display 规则盖掉） */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+
+@media (hover: none) {
+  /* 触屏没有悬停：点到哪一段，那一段的操作按钮才出现（见 .is-open） */
+  .tool { padding: 5px 9px; }
+}
+
+/* ---------------------------------------------------------------- topbar */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: var(--topbar-h);
+  padding: 0 20px;
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+.brand-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.brand-text { min-width: 0; }
+.brand-text h1 { margin: 0; font-size: 16px; font-weight: 600; white-space: nowrap; }
+.brand-text p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------------------------------------------------------- search */
+.search-wrap { position: relative; flex: 1 1 auto; max-width: 640px; margin-left: auto; }
+
+.search {
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.search-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-left: 12px;
+  fill: none;
+  stroke: var(--ink-faint);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 8px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 15px;
+  outline: none;
+}
+
+.search input::-webkit-search-cancel-button { display: none; }
+
+.search-count { flex: none; padding-right: 6px; color: var(--ink-faint); font-size: 12px; white-space: nowrap; }
+
+.clear-btn {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-right: 4px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.clear-btn:hover { background: var(--accent-soft); color: var(--accent); }
+
+.hint-key {
+  flex: none;
+  margin-right: 10px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--ink-faint);
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+/* 搜索结果下拉 */
+.hits {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 50;
+  max-height: 64vh;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.hits-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px 8px;
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+
+.hit {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  text-align: left;
+}
+
+.hit:hover, .hit.is-focused { background: var(--accent-soft); }
+
+.hit-where {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+
+.chip {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip.soft { background: var(--bg); color: var(--ink-faint); font-weight: 400; }
+
+.hit-text { display: block; color: var(--ink); font-size: 14px; line-height: 1.7; }
+.hit-text .lead { color: var(--ink-faint); }
+
+.hits-empty { padding: 18px 12px 22px; color: var(--ink-soft); font-size: 13.5px; }
+.hits-empty b { color: var(--ink); }
+
+mark { padding: 1px 0; border-radius: 3px; background: var(--mark); color: inherit; }
+mark.strong { background: var(--mark-strong); }
+mark.approx {
+  background: color-mix(in srgb, var(--mark) 55%, transparent);
+  border-bottom: 1px dashed var(--mark-strong);
+}
+
+/* ------------------------------------------------------- 当前位置提示条 */
+.where {
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 20;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(10px);
+}
+
+.where span {
+  display: block;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 7px 0;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------------------------------------------------------- layout */
+.layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  align-items: start;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.sidebar {
+  position: sticky;
+  top: calc(var(--topbar-h) + 31px);
+  height: calc(100vh - var(--topbar-h) - 31px);
+  overflow-y: auto;
+  padding: 14px 10px 40px 20px;
+  border-right: 1px solid var(--line);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.tab {
+  flex: 1;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.tab.is-active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.tab-badge {
+  display: inline-block;
+  min-width: 17px;
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  line-height: 17px;
+}
+
+.toc-group > summary {
+  padding: 7px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.toc-group > summary::-webkit-details-marker { display: none; }
+
+.toc-group > summary::before {
+  content: "▸";
+  display: inline-block;
+  width: 14px;
+  color: var(--ink-faint);
+  transition: transform .15s;
+}
+
+.toc-group[open] > summary::before { transform: rotate(90deg); }
+.toc-group > summary:hover { background: var(--accent-soft); }
+
+.toc-item {
+  display: block;
+  width: 100%;
+  padding: 6px 8px 6px 24px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.toc-item:hover { background: var(--accent-soft); color: var(--accent); }
+.toc-item.is-active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.toc-note {
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mark-strong) 45%, transparent);
+  color: var(--ink-soft);
+  font-size: 10.5px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* 书签面板 */
+.marks-empty {
+  margin: 6px 4px;
+  padding: 16px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.mark {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 8px 8px 8px 10px;
+  border-radius: 10px;
+}
+
+.mark:hover { background: var(--accent-soft); }
+
+.mark-name {
+  border: 0;
+  background: none;
+  padding: 2px 0;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.mark-where {
+  grid-column: 1 / -1;
+  color: var(--ink-faint);
+  font-size: 11.5px;
+}
+
+.mark-actions { display: flex; gap: 2px; align-items: flex-start; }
+
+.icon-btn {
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+
+.icon-btn:hover { background: var(--panel); color: var(--accent); }
+.icon-btn.danger:hover { color: var(--danger); }
+
+.mark-input {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13.5px;
+}
+
+.marks-tools { display: flex; gap: 6px; margin: 14px 4px 0; }
+
+.btn.tiny {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.marks-hint {
+  margin: 10px 4px 0;
+  color: var(--ink-faint);
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+.backup-text {
+  width: 100%;
+  height: 130px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-monospace, Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.backup-text:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* ---------------------------------------------------------------- 正文 */
+.main { min-width: 0; }
+.doc { max-width: 880px; padding: 26px 32px 140px; }
+
+.para {
+  position: relative;
+  margin: 0 0 12px;
+  padding: 3px 10px 3px 14px;
+  border-left: 3px solid transparent;
+  border-radius: 0 8px 8px 0;
+  scroll-margin-top: calc(var(--topbar-h) + 60px);
+}
+
+.para:hover { background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
+
+.para.is-doc {
+  margin: 42px 0 16px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.doc-tag {
+  margin-left: 10px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mark-strong) 40%, transparent);
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 400;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+
+.para.is-doc:first-child { margin-top: 0; }
+
+.para.is-chapter {
+  margin-top: 26px;
+  color: var(--accent);
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.para.is-article::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+  opacity: .5;
+}
+
+.para.is-target {
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  animation: flash 1.6s ease-out;
+}
+
+@keyframes flash {
+  from { background: var(--mark-strong); }
+  to { background: var(--accent-soft); }
+}
+
+.para-tools {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s;
+}
+
+.para:hover .para-tools,
+.para.is-open .para-tools { opacity: 1; pointer-events: auto; }
+
+.tool {
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink-faint);
+  font-size: 11.5px;
+}
+
+.tool:hover { color: var(--accent); border-color: var(--accent); }
+.tool.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+/* 表格 */
+.table-block { margin: 18px 0 22px; overflow-x: auto; }
+
+.table-block figcaption {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.table-block table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.table-block th, .table-block td {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table-block th { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.table-block tbody tr:nth-child(even) { background: color-mix(in srgb, var(--bg) 60%, transparent); }
+.table-block .cat { font-weight: 600; white-space: nowrap; }
+.table-block .score { text-align: center; white-space: nowrap; }
+
+/* -------------------------------------------------------- 书签弹层 */
+.help-btn {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--ink-soft);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.help-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------------------------------------------------------- 使用说明 */
+.intro { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px; }
+.intro-scrim { position: absolute; inset: 0; background: rgb(12 16 24 / 52%); }
+
+.intro-card {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 26px 28px 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 20px 60px rgb(12 16 24 / 28%);
+}
+
+.intro-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.intro-x:hover { background: var(--bg); color: var(--ink); }
+
+.intro-credit {
+  margin: 0 0 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.intro-title { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+.intro-sub { margin: 0 0 18px; color: var(--ink-faint); font-size: 13px; }
+
+.intro-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.intro-list li { display: flex; gap: 12px; align-items: flex-start; }
+
+.intro-ico {
+  flex: none;
+  margin-top: 2px;
+  padding: 2px 9px;
+  border-radius: 7px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.intro-list b { display: block; margin-bottom: 2px; font-size: 14.5px; }
+.intro-list p { margin: 0; color: var(--ink-soft); font-size: 13.5px; line-height: 1.7; }
+
+.intro-list kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--bg);
+  font-family: var(--sans);
+  font-size: 11.5px;
+}
+
+.intro-foot {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+
+.intro-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+.intro-actions .btn { padding: 9px 22px; }
+
+body.intro-open { overflow: hidden; }
+
+/* -------------------------------------------------------- 书签弹层 */
+.popover {
+  position: fixed;
+  z-index: 70;
+  width: 288px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.popover-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink); }
+
+.popover input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+}
+
+.popover input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.popover-where { margin: 8px 0 12px; color: var(--ink-faint); font-size: 12px; line-height: 1.5; }
+
+.popover-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+.btn {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { filter: brightness(1.06); color: #fff; }
+
+/* ---------------------------------------------------------------- misc */
+.menu-btn {
+  display: none;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 9px 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+}
+
+.menu-btn span { display: block; height: 2px; margin: 3px 0; border-radius: 2px; background: var(--ink-soft); }
+
+.scrim { position: fixed; inset: var(--topbar-h) 0 0 0; z-index: 15; background: rgb(12 16 24 / 40%); }
+
+.to-top {
+  position: fixed;
+  right: 26px;
+  bottom: 26px;
+  z-index: 30;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink-soft);
+  font-size: 13px;
+  box-shadow: var(--shadow);
+}
+
+.to-top:hover { color: var(--accent); border-color: var(--accent); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  z-index: 80;
+  transform: translateX(-50%);
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgb(22 24 29 / 92%);
+  color: #fff;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+}
+
+.footnote {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 18px 32px 44px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+
+  .menu-btn { display: block; }
+
+  .sidebar {
+    position: fixed;
+    top: var(--topbar-h);
+    left: 0;
+    z-index: 20;
+    width: 308px;
+    height: calc(100vh - var(--topbar-h));
+    height: calc(100dvh - var(--topbar-h));
+    background: var(--panel);
+    transform: translateX(-102%);
+    transition: transform .2s ease;
+  }
+
+  body.nav-open .sidebar { transform: none; box-shadow: var(--shadow); }
+
+  .brand-text p, .hint-key { display: none; }
+  .search-wrap { max-width: none; }
+  .doc { padding-left: 18px; padding-right: 18px; }
+
+  .tool { padding: 5px 9px; }
+}
+
+@media (max-width: 640px) {
+  :root { --topbar-h: 58px; }
+
+  .topbar { gap: 10px; padding: 0 12px; }
+  .brand-mark { width: 32px; height: 32px; font-size: 16px; border-radius: 9px; }
+  .brand-text h1 { font-size: 14.5px; }
+  .menu-btn { width: 34px; height: 34px; padding: 8px 7px; }
+
+  .search input { padding: 9px 6px; font-size: 16px; }  /* 16px 避免 iOS 聚焦时放大 */
+  .search-icon { margin-left: 10px; }
+
+  .hits { max-height: 68vh; border-radius: 12px; }
+  .hit { padding: 12px; }
+  .hit-text { font-size: 13.5px; }
+
+  .where span { padding: 6px 0; font-size: 12px; }
+
+  .sidebar { width: 88vw; max-width: 340px; }
+  .doc { padding: 14px 12px 110px; }
+  .para { padding: 4px 8px 4px 12px; margin-bottom: 14px; }
+  .para.is-doc { margin: 32px 0 14px; padding: 12px; font-size: 16.5px; }
+  .para.is-chapter { margin-top: 22px; }
+  .para-tools { right: 2px; top: 2px; }
+  .tool { font-size: 11px; padding: 5px 8px; }
+
+  .table-block table { font-size: 12.5px; }
+  .table-block th, .table-block td { padding: 6px 8px; }
+
+  .to-top { right: 14px; bottom: 14px; padding: 8px 14px; }
+
+  /* 弹层改成贴底，方便单手操作 */
+  .popover {
+    top: auto !important;
+    left: 10px !important;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+    padding: 16px;
+  }
+
+  .popover input { font-size: 16px; padding: 10px; }
+  .popover-actions .btn { flex: 1; padding: 9px 14px; }
+
+  .footnote { padding: 16px 14px 40px; font-size: 12px; }
+}
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="打开目录" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">安</div>
+    <div class="brand-text">
+      <h1>安徽大学学生手册</h1>
+      <p id="meta-line">正在载入…</p>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <form class="search" id="search-form" role="search" autocomplete="off">
+      <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="8.5" cy="8.5" r="5.5"></circle><path d="M12.8 12.8 17 17"></path>
+      </svg>
+      <input id="q" name="q" type="search" placeholder="搜索关键词，如：转专业、奖学金、重修、请假"
+             autocomplete="off" spellcheck="false" aria-label="搜索学生手册">
+      <span class="search-count" id="search-count" hidden></span>
+      <button type="button" class="clear-btn" id="clear-btn" aria-label="清空搜索" hidden>&times;</button>
+      <kbd class="hint-key">Ctrl K</kbd>
+    </form>
+    <div class="hits" id="hits" hidden></div>
+  </div>
+
+  <button class="help-btn" id="help-btn" aria-label="使用说明" title="使用说明">?</button>
+</header>
+
+<div class="where" id="where" hidden><span id="where-text"></span></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="tabs" role="tablist">
+      <button class="tab is-active" id="tab-toc" data-tab="toc" role="tab" aria-selected="true">目录</button>
+      <button class="tab" id="tab-marks" data-tab="marks" role="tab" aria-selected="false">
+        书签<span class="tab-badge" id="mark-count" hidden>0</span>
+      </button>
+    </div>
+    <nav class="pane" id="pane-toc" aria-label="目录"></nav>
+    <div class="pane" id="pane-marks" hidden></div>
+  </aside>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main">
+    <article class="doc" id="doc"></article>
+  </main>
+</div>
+
+<button class="to-top" id="to-top" hidden>回到顶部</button>
+
+<div class="intro" id="intro" hidden>
+  <div class="intro-scrim" data-intro-close></div>
+  <section class="intro-card" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <button class="intro-x" id="intro-x" aria-label="关闭介绍">&times;</button>
+
+    <p class="intro-credit">本网页由从今至岁寒独立开发</p>
+    <h2 class="intro-title" id="intro-title">使用说明</h2>
+    <p class="intro-sub">《安徽大学学生手册》全文查询 · 下滑即可开始阅读</p>
+
+    <ul class="intro-list">
+      <li>
+        <span class="intro-ico">目录</span>
+        <div>
+          <b>点标题直接跳转</b>
+          <p>左侧按手册原有的 10 个部分、52 个条目排列。点任意标题，正文就跳到那一段，
+             顶部会一直显示你当前看到的是哪份文件、第几条。</p>
+        </div>
+      </li>
+      <li>
+        <span class="intro-ico">搜索</span>
+        <div>
+          <b>关键词搜索</b>
+          <p>想查什么直接往上方输入框里打，下面会列出每一处命中的位置和上下文，
+             点一条就跳过去。快捷键 <kbd>Ctrl</kbd>+<kbd>K</kbd>（Mac 用 <kbd>⌘</kbd>+<kbd>K</kbd>）或 <kbd>/</kbd>。</p>
+        </div>
+      </li>
+      <li>
+        <span class="intro-ico">书签</span>
+        <div>
+          <b>给常看的条文起个名字</b>
+          <p>点一下正文任意一段，会出现「书签」按钮，起个自己的名字保存。
+             左侧切到「书签」页签，可以改名、删除、一键跳回。</p>
+        </div>
+      </li>
+      <li>
+        <span class="intro-ico">复制</span>
+        <div>
+          <b>连位置一起复制走</b>
+          <p>同样是点一下段落，点「复制」，会把出处和原文一起复制，
+             方便粘到备忘录或聊天里。</p>
+        </div>
+      </li>
+    </ul>
+
+    <p class="intro-foot">
+      手机上「书签 / 复制」按钮点一下段落才出现，平时不会挡住正文；书签只保存在这台设备的浏览器里，
+      换设备或清理浏览器数据会丢失。内容来自《学生手册电子版.doc》，扫描识别稿可能有个别字词误差，
+      正式引用请以印发版本为准。
+    </p>
+
+    <div class="intro-actions">
+      <button class="btn primary" id="intro-start">开始使用</button>
+    </div>
+  </section>
+</div>
+
+<div class="popover" id="popover" hidden>
+  <p class="popover-title">加书签</p>
+  <input id="popover-input" type="text" maxlength="40" placeholder="给这个位置起个名字">
+  <p class="popover-where" id="popover-where"></p>
+  <div class="popover-actions">
+    <button class="btn primary" id="popover-save">保存</button>
+    <button class="btn" id="popover-cancel">取消</button>
+  </div>
+</div>
+
+<div class="intro" id="backup" hidden>
+  <div class="intro-scrim" id="backup-scrim"></div>
+  <section class="intro-card" role="dialog" aria-modal="true" aria-labelledby="backup-title">
+    <button class="intro-x" id="backup-x" aria-label="关闭">&times;</button>
+    <h2 class="intro-title" id="backup-title">书签备份</h2>
+    <p class="intro-sub" id="backup-sub"></p>
+    <textarea class="backup-text" id="backup-text"></textarea>
+    <div class="intro-actions">
+      <button class="btn" id="backup-cancel">关闭</button>
+      <button class="btn primary" id="backup-do">复制</button>
+    </div>
+  </section>
+</div>
+
+<p class="footnote" id="footnote"></p>
+
+<script>
+window.HANDBOOK = {"meta":{"title":"安徽大学学生手册","source":"学生手册电子版.doc","builtAt":"2026-09-22 16:20","paragraphs":2003,"chars":107937,"supplements":9,"supplementParagraphs":342},"paras":["安徽大学简介","安徽大学(Anhui University)坐落于素有“三国故地、包拯家乡，江淮首郡、吴楚要冲”美誉的历史文化名城、安徽省省会合肥市，学校是世界“双一流”和国家“211工程”首批入列高校，是安徽省与教育部、与国家国防科工局共建高校，是安徽省属重点综合型大学。","1928年，安徽大学肇基于时为省会的安庆市，由此开启安徽现代高等教育之先河，由是续江襟淮带崇教文化之菁华；学校1956年迁建合肥，1958年9月16日毛泽东主席亲笔题写校名，学校也将这天定为校庆日；办学近百年来，安徽大学勇担民族复兴大任，秉承“至诚至坚、博学笃行”校训，不断奋力前行，始终追求卓越，累计培养了32万余名优秀毕业生，是安徽省内毕业生人数最多、分布最广、影响最大的高校，被誉为省属高校的“排头兵、领头雁”。","学校坚持立德树人根本任务，不断提高人才培养质量。学校坚持社会主义办学方向，全面贯彻党的教育方针，着力构建文理交融、理工互通、寓教于研的人才培养机制，努力培养具有社会责任感，富于人文情怀、科学精神和国际视野，服务国家和区域经济社会发展的各行各业的高素质创新人才；建有保障一流人才培养的办学条件体系，四区一园面积3200余亩、建筑面积125万平方米，教学科研仪器设备总值12.58亿余元，馆藏纸质图书375万余册；拥有本硕博完整的高等教育人才培养层次体系，28个学院，84个本科招生专业(其中38个为国家一流专业，总数并列全国高校第2位)；15个博士学位授权一级学科和1个博士学位授权二级学科、32个硕士学位授权一级学科和2个硕士学位授权二级学科、以及28个专业硕士学位授权类别，13个博士后科研流动站；建有14门国家级一流课程、2个国家级和26个省级大学生校外实践教育基地，4个国家级和9个省级实验教学2","(实训)示范中心、5个省级虚拟仿真实验教学中心；现有本科生22693人，博硕士研究生9389人，折合在校生数 38962；近年来，本科毕业生升学率平均保持在 35% 以上，本科生与研究生获省部级以上竞赛奖1900余项，位列全国“双一流”高校第63位，毕业校友获得“国家杰青”数列全国高校29名。","学校坚持走科研强校之路，不断增强科技创新实力。学校学科门类齐全，综合性特色显著，覆盖理学、工学、文学、历史学、哲学、经济学、法学、管理学、教育学、艺术学等10大门类，拥有2个国家级重点学科、25个省级重点学科；材料科学、化学、工程学、计算机科学、数学等5个学科进入ESI排名前1%；队伍建设坚持“人才强校”战略，2020年承担教学任务的专任教师有1841人，其中博硕士1673 人占比90.87%，高级职称教师976人占比53.01%，海外经历占比31.3%；队伍发展态势向好，2020年引进博士以上高层次人才223名，包括8名“长江”“杰青”“青年拔尖”等国家级人才，5名享受国务院政府特殊津贴专家，数量和增幅全省第一；已形成了以两院“院士”、国家“杰青”“优青”“万人计划”领军人才等为引领，师德高尚、结构合理、业务精良、国际化程度较高的师资队伍；科学研究聚焦集成电路先进材料与技术主攻方向，建设了“强光磁集成实验设施”“信息材料与智能感知”实验室等世界一流研究平台，产出了金属团簇材料、新型量子功能材料、磁斯格明子(skyrmion)存储材料等一批原创性成果，在高灵敏传感装备、毫米波芯片、水性聚氨酯等“卡脖子”关键技术领域取得重要突破；学校2020年获批国家自然科学基金项目92项，资助率为22.7%，高于全国平均水平，稳居省属高校首位。","学校坚持以贡献求发展，不断提升社会服务能力。学校与安徽省16个市签订了多层次的校市合作协议，与合肥市共建绿色产业技术创新研究院，与合肥市经济技术开发区共建三创学院，与50多家大中型企业建立了紧密的合作关系，与600多家企业振宁院士任名誉院长的“安徽大学纽约石溪学院”；与智利圣托马斯大学、乌克兰哈尔科夫大学、阿塞拜疆巴库大学、白俄罗斯布列斯特国立大学合作建立4所孔子学院，其中智利圣托马斯大学孔子学院先后荣获“全球先进孔子学院”“示范孔子学院”荣誉称号，习近平主席访智期间曾亲切接见学校派驻的中方院长及教师代表；与俄罗斯、法国、波兰、日本、韩国、墨西哥合作高校共建有9个“中国中心”；国际交流水平在省内高校领先、在全国高校居于先进地位、在国际上具有一定影响。","新时代，新目标，新征程。站在“两个一百年”奋斗目标的历史交汇点上，学校正精心组织好“十四五”规划实施，谋划好2028建校100周年和2035远景发展，学校将以习近平新时代中国特色社会主义思想为指导，进一步落实好立德树人根本任务，“调结构、转功能、增体量、提质量”，以一流学科建设催生更多世界一流成果，以一流的人才培养体系、一流的人才培养质量、一流的原始创新能力、一流的人才队伍努力跻身一流大学方阵，为现代化美好安徽建设贡献更大力量。","1958年9月16日，毛泽东同志亲笔为安微大学题写校名。","安徽大学于1928年在当时省会安庆市创建，次年更校名为“安徽省立大学”，1936年更名为“安徽省立安徽大学”，1946年改省立为国立、名“国立安徽大学”。1949年，学校迁芜湖与安徽学院合并，始名“安徽大学”。1956年，学校迁合肥市重建，更名“合肥大学”。1958年9月，毛泽东同志来皖视察，15日到达合肥。兼任校长的安徽省委第一书记曾希圣向毛泽东同志请示了两件事：一是安徽省省会是否迁往芜湖；二是为开学在即的学校题写校名。毛泽东同志忙完了一天的视察，兴致很浓，于16日深夜欣然命笔，一连写了4幅“安徽大学”校名，并给校长曾希圣同志写了一封信：","曾希圣同志：","校名遵嘱写了四张，请选用。沿途一望，生气蓬勃，肯定是有希望的，有大希望的。但不要骄傲，以为以为如何？合肥不错，为皖之中，是否要搬芜湖呢？从长考虑，似较适宜，以为如何？毛泽东一九五八年九月十六日學 訓至诚至坚博学 笃行此8字中，有6字出自《礼记·中庸》。“至诚”是传统儒家的最高道德境界；“博学”“笃行”则被注为“诚之目”，是达到“至诚”境界的行为指南。“至坚”2字提炼自学校乃至时代对人的品格要求，同是达到“至诚”境界不可或缺的意志力因素。就今天来说，“至诚至坚”是指以诚实、诚信和坚毅、坚定为目标的人生修养过程，可视为对人“德”的要求；“博学笃行”是指以渊博、深厚和笃实、诚笃为指标的学行态度，可视为对人“才”的要求。“至诚至坚，博学笃行”8字联系起来解读，虽不外乎“德才兼备”的意思，但通过对“诚”“坚”“博”“笃”的强调，突出了对学习目的实践和对人成才的道德要求。","安徽大学校训制定于1996年底。1998年，学校在筹办建校70周年纪念活动期间，邀请中国当代佛学家、社会活动家、书法家赵朴初先生题写了校训。","安徽大学校歌1933创作，由安徽大学校长程演生先生作词，上海国立音专(上海音乐学院前身)萧友梅先生作曲。该曲为G大调的四部合唱曲，原为3\\2拍子，曲风质朴而庄重，与歌词的配合相得益彰。","安徽大学校歌歌词","潜岳苍苍，江淮汤汤。夏商肇启，雍容汉唐。文化丕成，民族是昌。莘莘多士，跻兹上庠。","潜岳苍苍，江淮汤汤。缅怀先哲，管仲蒙庄。高文显学，宋清孔彰。莘莘多士，跻兹上庠。","高等学校学生行为准则","(教育部教学(2005)5号)","一、志存高远，坚定信念。努力学习马克思列宁主义、毛泽东思想、邓小平理论和“三个代表”重要思想，面向世界，了解国情，确立在中国共产党领导下走社会主义道路、实现中华民族伟大复兴的共同理想和坚定信念，努力成为有理想、有道德、有文化、有纪律的社会主义新人。","二、热爱祖国，服务人民。弘扬民族精神，维护国家利益和民族团结。不参与违反四项基本原则、影响国家统一和社会稳定的活动。培养同人民群众的深厚感情，正确处理国家、集体和个人三者利益关系，增强社会责任感，甘愿为祖国为人民奉献。","三、勤奋学习，自强不息。追求真理，崇尚科学；刻苦钻研，严谨求实；积极实践，勇于创新；珍惜时间，学业有成。","四、遵纪守法，弘扬正气。遵守宪法、法律法规，遵守校纪校规正确行使权利，依法履行义务；敬廉崇洁，公道正派；敢于并善于同各种违法违纪行为作斗争。","五、诚实守信，严于律己。履约践诺，知行统一；遵从学术规范，恪守学术道德，不作弊，不剽窃；自尊自爱，自省自律；文明使用互联网；自觉抵制黄、赌、毒等不良诱惑。","六、明礼修身，团结友爱。弘扬传统美德，遵守社会公德，男女交往文明；关心集体，爱护公物，热心公益；尊敬师长，友爱同学，团结合作；仪表整洁，待人礼貌；豁达宽容，积极向上。","七、勤俭节约，艰苦奋斗。热爱劳动，珍惜他人和社会劳动成果；生活俭朴，杜绝浪费；不追求超越自身和家庭实际的物质享受。","八、强健体魄，热爱生活。积极参加文体活动，提高身体素质，保持心理健康：磨砺意志，不怕挫折，提高适应能力；增强安全意识，防止意外事故；关爱自然，爱护环境，珍惜资源。","安徽大学学生管理办法(修订)","(校党字(2017)75号)","第一章总 则","第一条 为规范学校学生管理行为，维护正常的教育教学秩序和生活秩序，保障学生合法权益，培养德、智、体、美等方面全面发展的社会主义建设者和接班人，依据教育法、高等教育法以及有关法律法规、《普通高等学校学生管理规定》以及《安徽大学章程》等，结合学校实际，制定本实施办法。","第二条 本规定适用于在我校接受普通高等学历教育的研究生和本、专科(高职)学生的管理。","第三条 学校要坚持社会主义办学方向，坚持马克思主义的指导地位，全面贯彻国家教育方针；要坚持以立德树人为根本，以理想信念教育为核心，培育和践行社会主义核心价值观，弘扬中华优秀传统文化和革命文化、社会主义先进文化，培养学生的社会责任感、创新精神和实践能力；要坚持依法治校，科学管理，健全和完善管理制度，规范管理行为，将管理与育人相结合，不断提高管理和服务水平。","第四条 学生应当拥护中国共产党领导，努力学习马克思主义、毛泽东思想、中国特色社会主义理论体系，深入学习习近平总书记系列重要讲话精神，坚定中国特色社会主义道路自信、理论自信、制度自信、文化自信，树立中国特色社会主义共同理想；应当树立爱国主义思想，具有团结统一、爱好和平、勤劳勇敢、自强不息的精神。","第五条学生应当增强法治观念，遵守宪法、法律、法规，遵守公民道德规范，遵守学校管理制度，具有良好的道德品质和行为习惯；应当秉承“至诚至坚，博学笃行”的校训精神，应当刻苦学习，勇于探索，积极实践，努力掌握现代科学文化知识和专业技能；应当积极锻炼身体，增进身心健康，提高个人修养，培养审美情趣。","第六条学校尊重和保护学生的合法权利，教育和引导学生承担应尽的义务与责任，鼓励和支持学生实行自我管理、自我服务、自我教育、自我监督。","第二章 学生的权利与义务","第七条 学生在校期间依法享有下列权利：","(一)参加学校教育教学计划安排的各项活动，使用学校提供的教育教学资源；","(二)在校内组织、参加学生团体，以适当方式参与学校管理，对学校与学生权益相关事务享有知情权、参与权、表达权和监督权；","(三)参加社会实践、志愿服务、勤工助学、文娱体育及科技文化创新等活动，获得就业创业指导和服务；","(四)申请奖学金、助学金及助学贷款；","(五)在思想品德、学业成绩等方面获得科学、公正评价，完成学校规定学业后获得相应的学历证书、学位证书；","(六)对学校给予的处分或者处理有异议，向学校、教育行政部门提出申诉；对学校、教职员工侵犯其人身权、财产权等合法权益的行为，提出申诉或者依法提起诉讼；","(七)法律、法规和学校章程规定的其他权利。","第八条学生在校期间依法履行下列义务：","(一)遵守宪法、法律、法规；","(二)遵守学校章程和管理制度；","(三)恪守学术道德，完成规定学业；","(四)按规定缴纳学费及有关费用，履行获得资助的相应义务；","(五)遵守学生行为规范，尊敬师长，养成良好的思想品德和行为习惯；","(六)法律、法规及学校章程规定的其他义务。","第三章学生团体和课外活动","第九条 学校建立健全学生代表大会制度，为学生会、研究生会等开展活动提供必要条件，支持其在学生管理中发挥作用。","学生可以在校内成立、参加学生团体；学生成立团体，应当按学校规定提出书面申请，报学校批准并施行登记和年检制度。","第十条 学生团体应当在宪法、法律、法规和学校管理制度范围内活动，接受学校的领导和管理。学生团体邀请校外组织、人员到校举办讲座等活动，需经学校批准。","第十一条 学校提倡并支持学生及学生团体开展有益于身心健康、成长成才的学术、科技、艺术、文娱、体育等活动。","学生及学生团体进行课外活动不得影响学校正常的教育教学和生活秩序。","第十二条 学校鼓励、支持并指导学生参加社会实践、志愿服务和开展勤工助学、助教、助管、助研等活动。","学生参加勤工助学、助教、助管、助研等活动应当遵守法律、法规以及学校、用工单位的管理制度，履行勤工助学、助研活动的有关协议。","第四章校园秩序","第十三条 学校实施依法治校，坚持按章管理。学校、学生应当共同维护校园正常秩序，保障学校环境安全、稳定，保障学生的正常学习和生活。","第十四条学校推行校务公开，支持和保障学生依法、依章参与学校民主管理，多渠道地听取学生的意见和建议。","学生会、研究生会是学生参与学校民主管理的主要组织形式。第十五条 学生应当自觉遵守公民道德规范，自觉遵守学校管理制度，爱护校园公共设施，创造和维护文明、整洁、优美、安全的学习和生活环境，树立安全风险防范和自我保护意识，保障自身合法权益。","第十六条 学生不得有酗酒、打架斗殴、赌博、吸毒，传播、复制、贩卖非法书刊及音像制品等违法行为；不得参与非法传销和进行邪教、封建迷信活动；不得从事或者参与有损大学生形象、有损社会公德、有损学校声誉、有悖社会公序良俗的活动。","学校发现学生在校内有违法行为或者严重精神疾病可能对他人造成伤害的，将依法采取或者协助有关部门采取必要措施。","第十七条 学生举行大型集会、游行、示威等活动，应当按法律程序和有关规定获得批准。对未获批准的，学校将依法予以劝阻或者制止。","第十八条 学校坚持教育与宗教相分离原则，任何组织和个人不得在学校进行宗教活动。","第十九条 学生应当遵循国家和学校关于网络使用的有关规定，不得登录非法网站和传播非法文字、音频、视频资料等，不得编造或者传播虚假、有害信息；不得攻击、侵入他人计算机和移动通讯网络系统。","第二十条 生应当遵守学校住宿管理规定，不得擅自外出租房居住。住校学生应当自觉遵守公寓管理规定，制定寝室公约，积极参与社区文化建设，争创文明宿舍。","第五章 奖励与资助","第二十一条 学校对在德、智、体、美等方面全面发展或者在思想品德、学业成绩、学术研究、科技创造、体育竞赛、文艺活动、志愿服务及社会实践等方面表现突出的学生，给予表彰和奖励。","第二十二条 学校对学生的表彰和奖励通过采取授予荣誉称号、颁发奖学金等多种形式，给予相应的精神鼓励或者物质奖励。","第二十三条学校对家庭经济困难的学生实施经济资助，符14合条件的学生可以按规定申请。","获得资助的学生应当树立诚信、感恩意识，并履行相应的义务。","第二十四条学校对学生予以表彰和奖励，以及确定推荐免试研究生、国家奖学金、公派出国留学人选等赋予学生利益的行为，须严格执行规定的程序，确保评选工作公开、公平、公正。","第六章学生处理与申诉","第二十五条 对有违法、违纪、违规行为的学生，学校根据其违法、违纪、违规行为的性质和过错的严重程度给予相应的批评教育或者纪律处分。","第二十六条 纪律处分的种类分为：","(一)警告；","(二)严重警告；","(三)记过；","(四)留校察看；","(五)开除学籍。","第二十七条 学生有下列情形之一者，给予开除学籍处分：","(一)违反宪法，反对四项基本原则、破坏安定团结、扰乱社会秩序的；","(二)触犯国家法律，构成刑事犯罪的；","(三)受到治安管理处罚，情节严重、性质恶劣的；","(四)代替他人或者让他人代替自己参加考试、组织作弊、使用通讯设备或其他器材作弊、向他人出售考试试题或答案牟取利益，以及其他严重作弊或扰乱考试秩序行为的；","(五)学位论文、公开发表的研究成果存在抄袭、篡改、伪造等学术不端行为，情节严重的，或者代写论文、买卖论文的；","(六)违反学校规定，严重影响学校教育教学秩序、生活秩序或者公共场所管理秩序的；","(七)侵害其他个人、组织合法权益，造成严重后果的；","(八)屡次违反学校规定受到纪律处分，经教育不改的。","第二十八条 学校对学生作出处分决定，应先进行合规性审查，由校长办公会议研究决定，并报上级教育行政部门备案。","第二十九条 学校在对学生作出处理决定之前，听取学生或者其代理人的陈述和申辩，处理学生做到证据充分、依据明确、定性准确、程序正当、处分适当。","第三十条学校对学生作出处理，一律出具处理决定书。处理决定书内容包括学生的基本信息，作出处分的事实和证据，处分的种类、依据、期限，申诉的途径和期限以及其他必要内容等。","第三十一条 处理决定书送达学生本人，学生拒绝签收的，以留置方式送达；已离校的，采取邮寄方式送达；难于联系的，利用学校学生处网站以公告方式送达。","第三十二条 除开除学籍处分以外，学校给予学生处分设置6到12个月期限，到期按学校规定程序予以解除，解除处分后，学生获得表彰、奖励及其他权益，不再受原处分的影响。","第三十三条 学校成立学生申诉处理委员会，受理学生对处理或者纪律处分的申诉。学生申诉处理委员会成员由学校负责人、有关部门负责人、学校法律顾问以及教师和学生代表组成。","学校制定学生申诉的具体办法，健全学生申诉处理委员会的组成与工作规则，提供必要条件，保证客观、公正地履行职责。","第三十四条学生对复查决定有异议的，应当在接到学校复查决定书之日起10日内，向上级教育行政部门提出书面申诉。","第三十五条 从处理、处分决定或者复查决定送达之日起，学生在申诉期内未提出申诉的，学校或者上级教育行政部门不再受理其提出的申诉。","处理、处分或者复查决定书未告知学生申诉期限的，申诉期限自学生知道或者应当知道处理或者处分决定之日起计算，但最长不得超过6个月。","第三十六条 被开除学籍或作退学处理的学生，由学校发给学习证明，学生按学校规定期限离校，档案由学校退回其家庭所在地，户口按照国家相关规定迁回原户籍地或者家庭户籍所在地。","第三十七条 对学生的奖励、处分、退学处理以及解除处分材料，学校按规定真实完整地归入学校文书档案和本人档案。","第七章 附 则","第三十八条 关于学籍、学生公寓、校园秩序、违纪处分和学生申诉等具体管理实施办法由学校另行制定，学生应当自觉遵守。","第三十九条对在我校接受高等教育的其他各类学生的管理参照本实施办法实施。","第四十条 本实施办法自发布之日起施行，由学校教务处、学生处(党委学工部)、研究生院(党委研究生工作部)负责解释。原《安徽大学学生管理规定》(校政(2006)5号)同时废止，其他有关文件规定与本办法不一致的，以本办法为准。","安徽大学学生公寓管理规定","学生公寓是学生生活和学习的重要场所，是课堂之外对学生进行思想政治工作和素质教育的重要阵地，中华人民共和国教育部令第41号《普通高等学校学生管理规定》第四十八条明确要求“学校应当建立健全学生住宿管理制度。学生应当遵守学校关于学生住宿管理的规定”，故学校特制定本规定并请每位在校学生认真学习，严格遵守。","一、学生公寓由后勤保障处负责管理，其他单位和个人未经许可不得擅自安排和调配学生宿舍；学生公寓的物业管理由安徽大学后勤保障处承担；","二、学生公寓物业管理实行管理员负责制，管理员进入学生寝室从事相关检查、维修等工作，应当事先征得住宿学生同意；学生应当尊重公寓管理员、保洁员的工作，积极配合学校开展“文明寝室”评比活动；","三、学校建立学生公寓寝室长制度，鼓励学生参与学生公寓管理；学生应当爱护公寓的公共财产及消防设施，发现寝室设备损坏可直接拨打物业报修电话或扫二维码报修。如发现公共设备设施损坏，请及时到管理员处报修或拨打物业报修电话报修；","四、学生入住公寓应当缴纳住宿费，按照指定的房间、床位住宿。寝室调整和学生离校时，必须保持设备、家具完好，损坏公物要按价赔偿；学生因休学、出国交流、参军等原因离开学校较长时间(一年以上)时，须到后勤保障处物业监管办公室办理有关退宿手续，将床位退出并将寝室钥匙交还所在公寓管理员处，否则后勤保障处不出具相关证明，由此影响退还住宿费等情况责任自负；","五、学生出入公寓应主动在门禁系统刷校园卡通过，未带校园卡者应向值班员出示有效证件进行登记；探亲访友者进入公寓应由被探访学生引领并在值班吧台登记验证；未经管理员许可，8异性不得进入学生公寓。凡携带大件或贵重物品进出公寓者须自觉接受门卫值班员的检查并登记，经查实后方可出入公寓；学生离开寝室时，须将房门锁好，贵重物品随身携带，并妥善保管好房门钥匙，钥匙如有遗失，应当及时到所在公寓管理员处缴纳钥匙配制款后再拨打物业报修电话报修；","六、提倡节水、节电，学生寝室用电实行定量供应，超出定额部分有偿使用；住宿学生应当遵守学生公寓作息时间，晚23:30后归寝应在公寓大厅值班吧台处登记；学生寝室内不得留宿他人。","七、住宿学生应严格遵守安徽省教育厅对学生宿舍管理提出的“六个严禁”，具体内容如下：","1、严禁在学生宿舍使用电炉、电饭锅、热得快、电熨斗等大功率电器或使用燃气燃油炉和酒精炉等；","2、严禁在宿舍及楼道等处私拉电线、私接灯头和插座；","3、严禁在宿舍内吸烟、点蜡烛、焚烧物品；","4、严禁在床上使用台灯、充电器等连接交流电源的用品","5、严禁在宿舍燃放烟花爆竹或存放易燃、易爆物品；","6、严禁损坏宿舍楼内消防栓、灭火器等消防设施和器材。","八、住宿学生有维护公寓内公共秩序的义务；不准在公寓区随意张贴、大声喧哗；严禁在寝室内酗酒、打架斗殴、进行非法集会及带有赌博性质的活动；严禁在公寓内吸毒，传播、复制、贩卖非法书刊和音像制品等违法行为；严禁将易燃、易爆、剧毒等危险品和法律明令禁止私人藏有的枪械(含汽枪)、弹药、管制刀具等带入寝室；不准在公寓内从事经营和推销活动；不准在学生公寓内饲养猫、狗等宠物；不准在楼道内进行踢球、打球、溜旱冰等影响环境和他人休息的体育活动；","九、搞好寝室卫生，保持居室清洁、物品整齐。寝室要建立卫生轮流值日制度；禁止泼脏水、扔纸屑、果皮、烟头等杂物，垃圾要袋装送到指定垃圾收集点；禁止将杂物倒入下水道中以免造成堵塞，否则自行承担疏通费用；","十、阅报处是学生阅览读报的场所，应保持安静，其桌椅不得挪为他用，报纸阅后请放回原处：楼层的洗衣机要按操作规程有序使用，人为损坏须按价赔偿；","十一、严禁翻越寝室阳台和私自到天台防水屋面，违者所发生的意外事故责任自负。发生刑事案件时应保护好现场，并及时向管理人员和保卫部门报告；","十二、在寝室使用计算机网络，应遵守国家和学校的有关规定，不得登陆非法网站，传播有害信息；","十三、保障消防通道畅通，公寓内严禁停放自行车、电瓶车等","十四、本规定由安徽大学后勤保障处负责解释。","安徽大学学生宿舍空调设备使用和管理办法(试行)","(校政(2014)9号)","第一章 总则","第一条 为进一步规范学校学生宿舍空调管理与使用行为，营造良好的学生生活、学习环境，确保空调设备安全、经济运行，特制定本办法。","第二条本办法适用范围，包括各校区所有安装空调的学生宿舍。","第三条 本办法规定之空调设备，包括学生宿舍内的空调挂机、空调外机、空调遥控器、空调专用插座、空调线路、空调外机托架，以及空调计费与管理系统等。","第二章管理与维护","第四条 学生宿舍空调管理系统纳入校园“一卡通”进行管理。空调管理系统应具有反窃电、预付费、远程抄表、远程控制、限功率及回路最大电流、恶性负载识别、定时断送电等功能。","第五条 学生宿舍空调设备由学校统一组织安装，其日常管理与维护职责由各校区学生宿舍物业服务单位承担。学生宿舍空调智能管理系统建设、管理与维护由校数字化校园建设领导小组办公室牵头负责。","第六条 在空调设备保修期内，物业服务单位依据空调采购合同负责敦促并配合空调中标企业做好日常清洗、检测与维护等工作；在空调设备保修期外，按照相关规定原则上统一招标确定学生宿舍空调设备专业维保单位或专业服务商，负责学生宿舍空调日常维护维修工作。","第七条 学生宿舍物业服务单位负责联系空调维保单位开展加氟、日常清洗、检测与维护维修等工作；做好日常巡查、报修登记、纠正违规使用空调设备行为等工作，各校区后勤管理部n代表学校加强空调管理与服务的日常监管与考核，强化空调运行维护费用预算管理和绩效评估等工作。","第八条 学生宿舍空调设备的维修由学校确定的维保单位统一安排。任何个人不得私自拆卸或打开室内机和室外机，非空调使用季节原则上关闭各楼宇空调总电源。","第三章 收费管理","第九条 学生宿舍空调实行有偿使用、适当补贴。在空调使用季节，学生宿舍用电定额执行每生每月10度标准；在非空调使用季节，学生宿舍用电定额仍执行每生每月6度，超支部分自理。第十条 学生宿舍空调用电消费纳入宿舍日常生活消费一并充值、一并结算，采取“先购电，后使用”，空调用电单价按合肥市居民生活用电价格进行结算。","第十一条 学生宿舍空调消费由寝室长召开全体室员会议协商解决。","第四章 使用管理","第十二条 使用者应严格按照《空调使用说明书》操作。学生首次使用空调，应检查空调遥控器是否正常。在空调使用过程中若出现异常情况，应快速切断空调电源，立即在宿舍管理部门登记或24小时服务平台进行报修，不得私自拆修。","第十三条 每间宿舍由专人领取空调遥控器(电池自备)一个，不得打开室内机手动开机。长时间不用遥控器应取出电池。在使用过程中出现进失或损坏，由该寝室同学协商自行到学校服务点购买。学生退、换寝室时，遥控器经检查完好无损，方可办理相关手续。","第十四条 空调运行中要关闭门窗，夏季空调温度设置应不低于26摄氏度，冬季空调温度设置应不高于20摄氏度，确保使22用效果和节约用电。空调不运行时应经常开启门窗，保持室内空气的清新。","第十五条 学生宿舍空调插座为空调室内机专用插座，严禁接插其他用电设备，严禁私自改变空调电源使用用途和私自拆装、挪动空调设施设备；禁止将空调用电线路与照明用电线路串接用电，禁止从楼层表箱接线用电或改接表箱现有出线，防止不同电源点线路短路事故和其他安全隐患。","第十六条严禁在空调电源线上栓接绳索或晾晒物品，严禁在空调内机、外机上堆放杂物，不得在空调设备上乱写、乱画、乱贴、乱刻，不得在空调外机支架上挂、搭物品。离开宿舍应关闭空调，长时间不用空调，应拔出插头。","第十七条 空调运行过程中，严禁带水触碰空调设备，不得直接用水冲洗设备。禁止使用钝器、锐器等对系统设备及其供电线路实施敲、砸、烧等不文明行为。","第十八条 对于不按规定使用空调设备的学生，一经发现，学校将据情节对责任人给予批评教育乃至相应的纪律处分；造成设备损坏及人身伤害的，责任人除将受到纪律处分外，还承担经济赔偿责任和法律责任；无法确定具体责任人的，由宿舍全体人员共同承担责任。学生违纪表现还将纳入当年的“学年考核”，作为评奖、评优、推荐免试研究生和就业的重要依据。","第五章附则","第十九条 学校将根据本办法试行情况和管理需要适时进行修订。","第二十条 若出现外围电力保障条件受限或学校内部电力设施超载、危及电网安全等情况，应服从学校统一电力调度，优先保证教学、生活等重要负载用电需求。","第二十一条 本办法由后勤管理处、实验室与设备管理处负责解释。","第二十二条本办法自学校印发之日起试行。","安徽大学学生宿舍空调使用又明公约","一、倡导节能，低碳环保。","空调运行要关闭门窗；夏季温度设置不低于26摄氏度，多季不高于20摄氏度；人离机停，珍惜人类共有的环境资源，让空调帮助调温而非降温；","二、电费协商，和谐礼让。","空调消费要协商解决；在空调使用时间、温度设定等细节上，相互尊重，礼让为先，呵护同学之间的浓浓情谊，让空调有效聚心而非离心；","三、防患未然，安全第一。","空调异常要及时报修；不私自改变空调电源使用用途，不在空调专用插座接插其他用电设备，杜绝安全隐患，让空调营造一份安心而非担心；","四、爱护公物，文明使用。","空调使用要规范操作；不拆装、挪动空调设备；不在空调设备上乱写、乱贴、乱堆物品；共建和谐靓丽风景，让空调彰显文明而改变陋习；","五、懂得感恩，珍惜时光。","舒适环境要感恩珍惜；不将空调作为虚度光阴、贪图享乐的借口：不将空调作为蜗居宿舍、封闭自我的理由，让空调成为成长成才的助力而非阻力。","安徽大学本科学生校外住宿管理规定","(校政(2021)57号)","第一章 总则","第一条 为加强本科学生校外住宿管理，维护学校正常的教学秩序和生活秩序，保障学生人身财产安全和校园安全稳定，依据《教育部关于切实加强高校学生住宿管理的通知》《普通高等学校学生公寓安全工作指南》等文件要求，结合学校实际，制定本规定。","第二条 本规定适用于在安徽大学接受普通高等学历教育的全日制在籍本科学生(以下简称学生)。","第三条 本规定所称校外住宿，是指学生在学校安排的学生宿舍以外的场所长期住宿的行为，包括自住房、租借用房等。","第四条 学生宿舍是学生日常生活与学习的重要场所，是学校对学生进行思想政治工作和素质教育的重要阵地。学校为所有学生安排宿舍，原则上不允许学生校外住宿，学生确有特殊情况的，需按照相关程序办理校外住宿手续。","第五条 学生校外住宿实行申请审批制度，符合条件的学生需按照规定办理相关手续，并自觉遵守相关管理规定。","第二章申请条件和程序","第六条 学生申请校外住宿应符合以下条件之一：","(一)因身心问题不适宜在集体宿舍住宿的；","(二)其他可以申请校外住宿的特殊情况。","第七条 学生履行校外住宿程序：","(一)学生一般应于学年结束前两周(新生可在入学报到时)提出校外住宿申请；因突发疾病或特殊情况者，可临时提出申请；","(二)家长知情同意并出具知情同意书；","(三)辅导员初审；","(四)学院主要负责人审批：","(五)学校学生管理部门审核；","(六)后勤保障处办理退宿手续；","(七)财务处做好学生住宿费的结算工作。","第八条 学生申请校外住宿应提供的材料：","(一)有学生本人和家长双方签字的《安徽大学学生校外住宿申请表》；","(二)学生家长同意学生办理校外住宿的知情同意书；","(三)因身心健康原因申请校外住宿的，还需提供校医院或二级甲等以上医院开具的证明材料或病历；","(四)房屋租赁合同等与租赁行为有关的相关证件复印件；","(五)其他特殊情况证明材料。","第三章 校外住宿学生的责任义务","第九条遵守国家法律法规、校纪校规和社会公德，服从所在班级、学院和学校有关部门管理，不做有损学校声誉的事情。","第十条 按时参加班级、学院和学校开展的各项活动。","第十一条 增强安全意识，保证自身安全，注意防火、防盗、防骗、防灾等；向学校书面承诺加强人身和财产安全的自我保护，因校外住宿而引发的各类纠纷和事故，由学生本人和家长承担相应责任。","第十二条 定期向辅导员汇报思想、学习和生活情况，及时报告校外住所的地址变化和有效联系方式变更等情况。","第十三条 因身体疾病、精神类疾病或出现严重心理问题申请校外住宿的，原则上应由家长或家长委托人陪读。","第四章 教育管理","第十四条 各学院负责本学院校外住宿学生的申请审批和教育管理工作；学校学生管理部门负责学生校外住宿的审核工作。","ANHUIUNIVERSTY 行业规范","第十五条 各学院要加强安全教育，须向申请校外住宿的学生和家长说明校外住宿可能产生的后果和个人应承担的责任等。","第十六条 各学院应严格控制学生校外住宿，并加强校外住宿学生的教育、管理工作，及时了解和掌握校外住宿学生的情况，做到工作到位、责任到位。","第十七条 如学生不按规定程序提交校外住宿申请或未经批准擅自外出住宿，学生本人承担全部责任，学校将视情节给予相应的纪律处分。","第十八条 校外住宿学生如需重新入住学生宿舍，须按照学校相关规定重新提出申请、办理入住手续。","第五章附则","第十九条 学校原则上不为延期毕业的学生安排住宿。延期毕业学生校外住宿管理参照本规定执行。","第二十条学校对接受专科学历教育类型学生的校外住宿管理，参照本规定执行。","第二十一条 本办法自发布之日起实施，由学生处(学生发展中心)负责解释。","安徽大学本科学生学籍管理规定(修订)","(校党字(2017)75号)","第一章 总则","第一条 为维护学校正常的教育教学秩序，规范学籍管理行为，保障学生合法权益，培养德、智、体、美等方面全面发展的社会主义建设者和接班人，依据《中华人民共和国教育法》《中华人民共和国高等教育法》《普通高等学校学生管理规定》以及《安徽大学章程》以及有关法律、规章，结合本校实际，制定本规定。","第二条 本规定所称学籍管理，是指对学生在校学习资格及在校学历的管理，包括入学资格审查、在籍注册、学籍变更、学习纪律、课程考核、学业成绩、毕业与学位资格审查、学历和学位证明颁发等事务。","第三条 本规定适用于在安徽大学接受普通高等学历教育的全日制本科学生。","第二章 管理制度与学习年限","第四条 本科教育实行学分制管理，学分、学分绩点和平均学分绩点是学生学业状况的基本指标，即以学分来统计学生学习数量，以学分绩点来评价学习质量，以平均学分绩点来评估学习过程总体情况。","第五条 本科教育标准学习年限为4年(特殊专业5年)，同时设置弹性学习年限3至6年(特殊专业4-7年)。相关规定如下：","(一)学生一般应在标准学习年限内修完主修专业培养方案规定内容、完成学业；在最长学习年限内，学生也可以分阶段完成学业；除另有规定外，学生在最长学习年限内(含休学和保留学籍时间)未完成学业的，将予以退学。","(二)学生在校学习满3学年、提前修满主修专业培养方案规定内容，可以申请提前毕业。","(三)学生因创业、出国(境)留学等学业原因或身体健康等特殊原因不能连续在校学习的，可以申请休学并保留学籍；体学时间一般以学年为单位或至下一学年前止；休学一般累计不超过2次，累计时长不超过2学年。","(四)新生和在校学生应征参加中国人民解放军(含中国人民武装警察部队)，学校保留其入学资格或者学籍至退役后2年。","(五)保留入学资格或休学的学生，在复学当年如原录取专业相应年级未招生或已停招，经学校批准，可编入相近专业继续学习或视具体情况予以处理。","(六)学生因退学等情况中止学业，其在校学习期间所修课程及已获得学分，学校予以记录。学生重新参加入学考试、符合录取条件，再次入学的，其已获得学分，经相关教学单位、教务处认定后予以承认。","第三章 入学与注册","第六条 按国家招生规定被我校录取的新生，应持录取通知书、本人身份证，按学校有关要求，在规定期限内到校办理入学手续：因故不能按期入学者，应向所在院(系)提出书面请假，说明理由并提交相关证明，由所在院(系)报学校招生办公室备案；假期一般不得超过2周；未请假或者请假逾期的，除因不可抗力等正当事由以外，视为放弃入学资格。","第七条 学校和各院(系)在报到时对新生入学资格进行初步审查，审查合格的办理入学手续，予以注册学籍；审查发现新生的录取通知、考生信息等身份证明材料，与本人实际情况不符，或者有其他违反国家招生考试规定情形的，取消入学资格并及时报学校招生办公室。","学生入学后，学校在3个月内，由招生办公室、各院(系)校医院及其他相关部门按照国家招生规定，对学生进行政治思想30品德及身心健康复查。复查内容包括但不限于：","(一)录取手续及程序等是否合乎国家招生规定；","(二)所获得的录取资格是否真实、合乎相关规定：","(三)本人及身份证明与录取通知、考生档案等是否一致；","(四)身心健康状况是否符合报考专业或者专业类别体检要求，能否保证在校正常学习、生活：","(五)艺术等特殊类型录取学生的专业水平是否符合录取要求。","复查不合格者，根据具体情况予以处理，直至取消入学资格。凡有弄虚作假、徇私舞弊等情形的，立即取消入学资格或学籍；情节严重的，学校移交有关部门调查处理。","取消入学资格或取消学籍者，档案由学校退回其家庭所在地，户口按照国家相关规定迁回原户籍地或者家庭户籍所在地。","第八条复查中发现学生身心状况不适宜在校学习，经学校指定的二级甲等以上医院(下同)诊断，需要在家休养治疗的，可由本人申请，所在院(系)和教务处签署意见，经分管校长批准后准许保留入学资格1年；保留入学资格者不具学籍；保留入学资格学生，应在2周内办理相关手续并返家休养治疗，不办理手续者，取消保留入学资格；保留入学资格期间医疗费用等均由学生自理，不享受在籍学生待遇；在保留入学资格期内经治疗康复，可在下一学年新生入学前向学校申请入学，由学校指定医院诊断，符合体检指标要求，经学校复查合格后，重新办理入学手续如复查仍不符合学习条件者，由学校区别情况予以处理，直至取消入学资格；学生逾期不办理入学手续者，视为放弃入学资格。","第九条 学生因创业事由可以申请保留入学资格(新生)或休学，申请应附有家长意见、创业培训及创业证明材料，经相关院(系)和学校审核批准后执行；保留入学资格时间最长1年，期间不具有学籍；学生保留入学资格或休学期满前应向学校申请入学，经学校审查合格后，办理入学手续。审查不合格的，取消入学资格；逾期不办理入学或复学手续者，视为放弃入学资格或学籍。 第十条 在校生必须遵照学校规定办理报到和注册手续后力获得和存续学籍；注册条件、程序等事宜规定如下：","(一)高等教育属于非义务教育，在校生须在每学年开学前一周内，根据财务处规定，缴纳学费、住宿费、教材代收代支费等规定费用。","(二)教务处根据学生缴费信息，在教务管理系统中进行学籍电子预注册。","(三)在校学生每学年、学期在规定期限内，持学生证在本人所在院(系)办理报到和确认注册手续后方存续学籍。","(四)未按学校规定缴纳费用或者其他不符合注册条件的不予注册；未经学籍注册的学生不能上报毕业生电子注册数据。","第十一条 不能按期注册者，应当履行暂缓注册手续；暂缓注册包括以下情况：","(一)因请假或其他特殊情况不能如期报到注册者。","(二)办理休学手续后，休学期未满且未经批准即返校者。","(三)未按规定缴清学费、住宿费等规定费用者。","暂缓注册学生须在每学期开学后1周内提交报告，说明情况并附相关证明，办理暂缓注册手续；逾期2周以上未办理暂缓注册手续者，视为放弃学籍，按自动退学处理；各院(系)教学办公室在每学期开学2周内，汇总暂缓注册学生名单并报教务处备案。","第十二条 家庭经济困难的学生可以申请助学贷款或者其他形式资助，办理有关手续后注册；特殊情况可申请分学期缴费、注册：学校按照国家有关规定为家庭经济困难学生提供教育救助，为申请助学贷款的学生办理有关手续。","第四章 选课与考勤","第十三条 学生应当根据所学专业人才培养方案和课程简介32的要求进行选课，并按照教学进程安排完成学业；学生未经选课不得参加考试，不能获得该课程的学分。","第十四条 标准学习年限内，学生每学期选课一般应不少于15学分：在规定时间内，学生可以调整本人所选课程，选课时间截止，将不再进行选课、退课操作。","第十五条 学生必须按时参加专业培养方案规定的学分课程和其他规定环节教学活动，不能按时参加者，应当事先请假并获得批准；学生考勤由课程或教学环节主讲教师实施，所在教学单位全面负责；教学秘书负责定期公布考勤统计情况并报教务处等有关部门备案。","第十六条 学生请假应由本人提出书面申请；3 日内由辅导员审批：3日(含)以上至1周，由院(系)教学办公室审批；1周以上的，由院长或系主任审批并送教务处备案；事假一般不得超过两周，因病请假必须附校医院诊断证明；学生请假期满应及时销假。","第十七条 对多次迟到、早退或旷课的学生，应当予以批评教育；情节严重的依据本规定相关条款和《安徽大学学生管理办法(修订)》相关条款处理；学生缺席参加专业培养方案规定活动的学时数，正常上课期间以8学时/天计，实习(实践)环节以4学时/天计(法定节假日除外)。","第五章 考核与成绩记载","第十八条 学生应参加规定课程和教学环节考核(以下简称课程考核)，课程考核及格方能获得学分及学分绩点；课程考核成绩记入成绩册，并归入本人学籍档案；学生参加学校认可的开放式网络课程学习后，也须参加规定的课程考核，方可取得课程考核成绩。","第十九条 学生旷课累计超过课程教学学时数1/3或缺交课程作业、实验报告达1/3的，该课程的主讲教师可取消其参加该22门课程的考核资格，学生应予重修：主讲教师另须将有关情况通知学生所在院(系)，并报教务处备案。","第二十条 学生违反考核纪律或者作弊的，该课程考核成绩记为零分，并应视其违纪或者作弊情节，由学生管理部门依据《安微大学学生管理办法(修订)》及学校学生违纪处分相关文件给予批评教育及其他相应纪律处分。","第二十一条 课程考核可采取考试和考查两种方式；考核可采取闭卷、开卷、机考、技能操作、论文等一种手段或多种手段组合；考试课程成绩一般按百分制记分，课程总评成绩以考试成绩为主，平时成绩占一定比例，总评成绩满60分为及格；考查或实践性环节课程成绩可按五级记分制记分，即优秀、良好、中等、及格、不及格。","第二十二条学生思想品德的考核、鉴定须以《普通高等学校学生管理规定》》(教育部2017第41号令)为主要依据，采取个人小结、师生民主评议等形式进行，写出有关实际表现的评语；考核一般每学年1次；对违纪学生，按有关处分规定处理。","第二十三条 学生体育课的成绩应当根据考勤、课内教学和课外锻炼活动的情况，结合体质健康情况和体育教学改革相关规定综合评定；因身体疾病或某种生理缺陷不能正常上课学生，应持校医院证明，经体育军事教学部审核和教务处批准后，可参加体育健康课程学习获得学分。","第二十四条 专业培养方案所规定课程(不含选修课程和实践环节课程)考核不及格者，准予补考1次；补考成绩高于60分(含60分)的以60分计，低于60分不能获得学分，应当重修；各教学单位一般应在下一学期第2周之前安排补考完毕。","第二十五条 学分制课程考核成绩记载实行5点学分绩点制，课程绩点是评价学生一门课程考核成绩高低的指标，课程考核成绩与课程绩点的换算关系如下：","(一)百分制计算方法(考试课程及格成绩绩点)：","一门课程的及格成绩绩点=该课程百分制成绩÷10-5，即G=课程百分制成绩-5一门课程学分绩点=该课程的学分×成绩绩点","(二)五级记分制换算方法(考查或实践性环节课程及格成绩绩点)：","课程五级记分制成绩 绩点 换算百分制","优秀 4.5 95","良好 3.5 85","中等 2.5 75","及格 1.0 60","不及格 0 0","第二十六条平均学分绩点GPA(Grade Point Average)是综合评估学生总体学习成绩高低、排名和质量的指标，是学生综合测评、申请辅修、毕业和获得学位的重要依据，计算公式是：平均学分绩点=学分绩点之和学分之和即：平均学分绩点GPA=E(课程学分×课程绩点)","E 课程学分","第二十七条 交换生、转学生或根据校际协议跨校修读课程的，在他校修读的课程成绩(学分)，经我校相关院(系)初审、教务处审核后，可替代所在专业培养方案中相应课程的成绩(学分)。","第二十八条学生参加创新创业、社会实践等活动以及发表论文、获得专利授权等与专业学习、学业要求相关的经历、成果，可以折算为学分，计入学业成绩，学校依据相应规定予以承认。","第六章重修、辅修、免听与免修","第二十九条 重修规定如下：","(一)实践环节课程考核不及格、补考不及格、考试违规、时考的学生，一律重修；选修课考核不及格者可以选择重修，也可以改选其他课程。.","(二)学生如对某门课程考核成绩不满意(及格，但课程统点较低)，可以选课重修；学生在校期间重修课程考核成绩全部保留并记入成绩单和学籍档案。","(三)重修一般应选择本院(系)开出的课程代码、课程名称相同的课程如因培养方案变动及其他特殊情况，经所在院(系)批准，可选择本院(系)或其他院(系)开出的相似课程进行重修。","第三十条 辅修规定如下：","(一)学校鼓励学生辅修其他专业，辅修专业标准学习年限为两年，大二上学期已修满本专业60学分且平均学分绩点在2.5及以上的学生，可以在大二下学期申请辅修第二专业。","(二)学生辅修第二专业应当跨学科门类，如辅修专业与主修专业在同一学科门类下，将不授予辅修第二专业学士学位。","(三)学生修满本专业课程学分，辅修修满第二专业课程25学分及以上者，颁发辅修证书；修满第二专业课程50学分及以上(含毕业论文学分)者，可申请辅修学士学位；辅修证书颁发、学士学位授予及其他相关事宜依据本规定及《安徽大学本科生辅修第二专业实施细则》等执行。","(四)辅修第二专业课程学分不能冲抵主修专业课程学分。","第三十一条 免听与免修规定如下：","(一)学生前期平均学分绩点达到3.2及以上的学生，通过自学或其他方式已掌握某门课程(除政治理论课、实践性教学环节等特殊不可免听课程外)教学内容，可申请该门课程免听；每学期可以申请免听的课程不超过2门。","申请程序为：学生开学一个月内，到所在院(系)填写《安微大学免听课申请表》并提供相应材料，经任课教师同意、开课院(系)审核、教务处批准，才可免听课、参加考试和获得学分。","重修课程、辅修课程因时间冲突，学生不能坚持全程听课，36应当提出申请，经院(系)和任课教师同意后，可以部分免听或全部免听，但须与任课教师保持联系并完成教师布置的学习在多和参加课程考核；未办理免听手续，任课教师取消其参加重修课程考核资格。","(二)学生已取得我校认可的相应课程学分或其他学习能力证明，可以申请免修。","申请程序为：学生开学一个月内，到所在院(系)填写填写《安徽大学课程免修申请表》，并提交相关材料。所在院(系)及教务处审核、批准后，予以承认学分和学分绩点：对学习能力证明免修绩点一般认定为百分制75分及2.5绩点：政治理论课、体育课、实验课、实践类课程、军事训练、课程设计、综合论文训练等不可免修。","第七章转专业与转学","第三十二条 转专业规定如下：","(一)符合学校“全校范围调整主修专业”政策的学生，学校另有相关规定。","(二)学生入学后患有某种疾病或有生理缺陷(隐瞒既往病史入学者除外)，经学校指定的二级甲等以上医院证明不能在原专业学习，但可在学校其他专业学习并完成学业的；学生对其他专业有兴趣及特长，本人申请并经学校考核证实，转专业更能发挥其专长者；学生确有特殊困难，本人申请并经学校考核证实，不转专业无法继续学习的。","(三)休学创业或退役后复学的学生，确需转专业学习的可按规定申请，同时提交相关证明材料，再参加学校转专业考核，可免笔试直接进入面试，同等条件下优先录取。","第三十三条 有下列情形之一，不得申请转专业：","(一)学生在校学习未满一个学期。","(二)艺术类与非艺术类互转的。","(三)当年的招生章程明确规定不能转专业的。","(四)已有一次转专业经历的。","(五)正在休学或保留学籍的。","(六)招生时确定为定向、委托培养的。","(七)身体条件不符合申请转入专业体检标准的。","(八)国家和学校规定的其他不允许转专业情况的。","第三十四条 学生应当在本校完成学业；因患病或者有特殊困难、特别需要，无法继续在本校学习或者不适应本校学习要来的，可以申请转学；其中患病学生需提供转出学校、拟转入学校指定医院的检查证明。特殊困难一般指因家庭有特殊情况，确需学生本人就近照顾的，以及符合学校规定的其他情形。","第三十五条 有下列情形之一，不得转学：","(一)入学未满一学期或者标准学习年限三年级(含三年级)以上学生。","(二)高考成绩低于拟转入学校相关专业同一生源地相应年份录取成绩的；","(三)由低学历层次转为高学历层次的；","(四)通过定向就业、艺术类、体育类、高水平艺术团、高水平运动队等特殊招生形式录取的；","(五)未通过普通高等学校招生全国统一考试或未使用高考成绩录取入学的；","(六)其他无正当理由的。","第三十六条 学生转学按下列规定办理：","(一)学生在本省内跨校转学的，由本人填写《高等学校学生转学申请(确认)表》，经所在院(系)及教务处审查、两校同意，由转出学校报省教育厅确认转学理由正当后方可办理转学手续。","(二)学生跨省转学的，由本人填写《高等学校学生转学申请(确认)表》，经两校同意，由转出地省级教育行政主管部门商转入地省级教育行政主管部门，按照转学条件确认后办理转学手续。须转户口的由转入地省级教育行政主管部门将有关文作我送转入学校所在地的公安机关。","(三)跨境转学，按国家留学相关规定办理。","第八章休学与复学","第三十七条 学生有下列情况之一，应予休学：","(一)因伤、病经指定医院诊断，须停课治疗、休养时间占一学期总学时1/3以上者。","(二)一学期请假(包括病、事假)、缺课累计超过该学期总学时1/3者。","(三)因创业或出国留学申请休学者。","(四)因特殊原因或困难须中断学业，本人申请或者学校认为应当休学者。","(五)休学时间及次数按本规定相关条款执行。","第三十八条 休学程序及相关事宜规定如下：","(一)学生填写《安徽大学学籍异动申报表(休学)》，持有关证明(包括家长意见)，经所在院(系)领导签署意见，报教务处批准、备案后，发给休学证明书；院(系)或学校认为应当休学者，由学生所在院(系)发给学生休学通知，再按规定办理手续。","(二)休学学生应当在2周内办理休学手续并离校。","(三)因病休学的学生，休学期间的医疗费用按照国家及学校有关规定办理。","(四)学生休学期间，学校保留其学籍，但不享受在校学习学生待遇。","第三十九条学生休学期满，须在次学年开学前(选课结束前)向学校书面提出复学申请；特殊情况复学学生须提前2周向所在院(系)和教务处提出书面复学申请；因病休学的应持有二级甲等以上医院诊断书，证明恢复健康，并经学校指定医院复查合格。教务处批准，方可办理复学手续，并根据选修课程情况编入原；业相应年级学习。","第四十条 复学申请须经院(系)审核、教务处批准；休学一年的学生应当转入下一年级同专业学习；休学期间，有严重违法乱纪行为的，院(系)、教务处研究报经分管校长批准后，取消其复学资格。","第四十一条 学生在保留入学资格、休学和保留学籍期间，如要报考其他学校，必须先办理取消入学资格或者取消学籍手续。","第九章 学业预警与退学","第四十二条 学业预警是学籍过程管理的重要措施，旨在警示学生、告知家长，以进一步协同督促学生努力学习，顺利完成学业；教务处每学期进行一次学业审核并发布预警通知，预警分“黄牌学业警告”和“红牌退学警告”两级。","第四十三条 学生每学期不及格课程总学分大于等于10学分，予以“黄牌学业警告”；不及格课程总学分大于等于20学分，予以“红牌退学警告”。","第四十四条 对受“黄牌学业警告”和“红牌退学警告”的学生，由教务处发出警告通知书，由院(系)送达学生本人，学生本人及家长签字后，通知书原本送回教务处备案。","第四十五条学生有下列情形之一，予以退学：","(一)休学期满，逾期2周未办理复学手续或连续休学2年申请复学经复查不合格者。","(二)保留学籍期满，逾期2周未提出复学申请或者申请复学经复查不合格者。","(三)开学后，超过学校规定2周期限未注册而又未履行暂缓注册手续的。","(四)报到并注册后，未请假离校或请假未准连续2周士加学校规定教学活动者。","(五)学业成绩未达到学校要求、在最长学习年限结束未完成学业者。","(六)经学校指定医院诊断，患有疾病或者意外伤残不能继续在校学习者。","(七)本人申请退学者。","第四十六条 退学处理程序及相关事宜规定如下：","(一)对学生的退学处理，由学生、所在院(系)填写报表，院(系)领导签署处理意见并附过程证明材料，报教务处审核：对学生作出取消入学资格、取消学籍、退学(不包括本人申请退学)处理事项，在合规性审查后，由校长办公会或者校长授权的专门会议研究决定；学生本人申请退学的，经院(系)、教务处、分管校长审核同意后，办理退学手续。","(二)学校出具退学决定书(证明书)，相关院(系)应当送达退学学生本人；因特殊情况无法送达本人的，由教务处在主页发布公告，自发布之日起至10个工作日止即视为送达，此后报上级教育行政部门备案并取消学籍电子注册。","(三)退学学生，应当在2周内办理退学和离校手续，学生档案由学校退回其家庭所在地，户口按照国家相关规定迁回原户籍地或者家庭户籍所在地。","(四)学生对退学处理等学籍管理措施有异议的，依照《安徽大学学生管理办法(修订)》申诉相关条款办理。","第四十七条取消入学资格、取消学籍、已退学的学生不得复学。","第十章毕业与学位授予、提前与延期、结业与肄业","第四十八条 学生毕业前，学校对其在校期间的表现作全面鉴定；鉴定内容包括政治思想、品德修养、学业成绩、遵纪守法等方面。","第四十九条 具有我校学籍的学生，在最长学习年限内修完培养方案规定内容，成绩合格，达到所在专业本科毕业要求的，学校准子毕业并颁发本科毕业证书：修完辅修第二专业人才培养方案规定的所有课程和实践环节并取得规定学分，基于主修专业毕业证书，依主、辅修次序予以标注；对无学籍学生不颁发任何形式学历证书。","第五十条 对准予毕业的学生，按《中华人民共和国学位条例》、《中华人民共和国学位条例暂行实施办法》、《安徽大学学位授予工作实施细则》相关规定，符合学士学位授予条件者，学校授予学士学位，并颁发学士学位证书；对已获得主修专业学士学位证书，且系统辅修完跨学科门类专业所有课程、完成所有实践环节并取得相应学分者，经校学位委员会审核通过，颁发辅修专业学士学位证书；如主、辅修专业属同一学科门类、授予学位相同，不再另授辅修专业学位证书。","第五十一条 学校鼓励提前修满专业培养方案规定应修基本学分、且满足毕业其他相关要求的学生申请提前毕业，相关规定如下：","(一)提前毕业的时间，依据本规定执行，原则上不超过一年。","(二)拟提前毕业的学生，一般须提前半年向所在学院提出申请，并由学生所在学院进行审核、批准后根据学生具体情况定出提前毕业的修读计划，报教务处备案。","(三)获准提前毕业学生毕业证书与学位证书(满足学士学位授予条件的)随同期毕业学生颁发。","第五十二条 标准学习年限学习结束，未能修满专业培养方案所规定最低学分要求者为延期毕业学生，相关规定如下：","(一)已获得总学分在150学分以下的，留校编入相应专业下一年级继续修读，否则将作为自动退学处理。","(二)已获得总学分在150学分以上的，本人选课后可申请免听，经院(系)同意、教务处批准，可参加相应学分课程考试。42","(三)延期毕业学生须由本人向所在院(系)和教务处提出延长学习期限申请，延长时间不得超过最长学习年限。","第五十三条 结业及相关问题规定如下：","(一)学生获得本专业毕业所需总学分75%以上，且其他方面达到毕业要求，准予申请结业。","(二)结业生由学校发给结业证书。","(三)在最长学习年限内，允许学生在结业后以旁听方式修读未通过的课程(或者教学环节)，成绩合格，符合毕业要求者可换发毕业证书，毕业时间按发证日期填写；满足学士学位授予条件者，可获得相应的学士学位。","(四)学生结业后旁听修读课程或教学环节期间如有违反学校纪律或弄虚作假行为的，不补发毕业证书。","第五十四条 退学学生按期办理完退学手续后学校发给退学证明；学满一学年者，准予申请肄业及发放肄业证书；学校每学年结束，进行一次学籍清理，凡超出最长学习年限、无故逾期两周不办理肄业、结业手续者，由学校注销其学籍，不再出具任何学习证明。","第五十五条学生入学后，修满本专业毕业所需总学分75%的，允许报考次年的硕士学位研究生招生考试。","第五十六条 学历证书、学位证书严格按照招生时确定的办学类型和学习形式填写、颁发。","第五十七条 学历证书、学位证书实行电子注册管理制度，学生应当积极配合学校做好毕(结)业信息采集工作；学校每年将颁发的毕(结)业证书信息在中国高等教育学生信息网上进行学历电子注册。","第五十八条 对违反国家招生规定取得入学资格或者学籍的，学校取消其学籍，不发给学历证书、学位证书；已发的学历证书、学位证书，学校依法予以撤销；对以作弊、剽窃、抄袭等学术不端行为或者其他不正当手段获得学历证书、学位证书的，学校依法予以撤销。","第五十九条学历证书和学位证书遗失或者损坏，经本人申请、公告遗失、学校核实后出具相应的证明书。证明书与原证书具有同等效力。","第十一章 附则","第六十条 学校行政主要领导是学生学籍学历管理工作第一责任人，对学生学籍学历管理工作负全面领导责任；分管教学工作校领导，是学生学籍学历管理工作直接主管责任人，承担领导、协调和监管责任；教务处负责人承担组织实施责任；院(系)行政负责人是学生学籍学历管理工作直接责任人。","第六十一条 教务处主管全校普通本科学生学籍并指定专人具体负责学籍管理相关工作；在校生、毕业生办理学籍和成绩证明须使用教务处统一印制的证明文本和中英文成绩单并加盖安徽大学学籍专用章后方为有效。","第六十二条 学校对接受其他学历教育类型学生的学籍管理，参照本规定执行。","第六十三条 本规定由教务处负责解释。","第六十四条 本规定自2017年9月1日起施行。原《安徽大学本科学生学籍管理规定》(校政(2011)25号)同时废止；其他有关文件规定与本规定不一致的，以本规定为准。","安徽大学免修、免听课程实施细则","(2009年9月1日修订)","为充分发挥学分制的优越性，鼓励学生积极进取、独立钻研，据养学生自主学习的能力，根据《安徽大学本科学生学籍管理规定》，特制定本办法。","一、免修","1、免修是指学生不参加某门课程的学习，但经学校考核或通过有关认证可获得该门课程的成绩和学分。","2、申请条件和范围：①学习成绩优秀或学有所长的学生，通过自学已掌握某门教学计划中规定的课程(思想政治理论课、体育、军训等实践环节除外)，可申请参加该课程的免修考试，成绩合格，即可免修；②辅修专业课程，在主修专业中已修读并取得学分，可申请免修，经审核同意后可不参加考试，直接以主修专业该课程成绩记入辅修专业成绩档案。","3.申请时间和手续：1学生申请课程免修，需在该课程开课学期的前一学期末(大一第一学期课程可在开学上课后两周内)，向所在学院申领《安徽大学免修申请表》，填妥后，附上符合课程免修条件的相关证明材料(如成绩单、获奖证书等)，经所在学院与开课部门审核同意，报教务处备案；2对免修辅修专业课程者，在辅修专业课表公布一周内办理免修手续。","4、免修考试的组织：免修考试由教务处会同有关教学单位组织。考试成绩合格，由教务处公布免修同学名单与课程。","二、免听","1、免听是指学生在选修某门课程后，经批准可不参与本课程的全部(或部分)学习过程，但必须参加课程的期末考试，以获得相应的成绩和学分。","2、申请条件和范围：①学生对选定的课程原则上不可以免听课而参加考试，对自学能力较强，在此前几学期考核成绩的平安徽大学本科课程考核管理办法","(校政(2021)15号)","第一章 总则","第一条 课程考核是教学工作的重要环节，是评定学生成绩和检验教学质量的主要手段。抓好考核工作，对于促进教风、学风建设具有重要意义，为进一步规范我校本科课程的考核管理，特制定本办法。","第二条 各专业人才培养方案规定的课程都应进行考核。毕业论文(设计、创作)考核按照《安徽大学本科毕业论文(设计、创作)管理规定》执行，其他课程考核按照本办法实施。","第二章组织管理","第三条 学校成立由校领导和教务处、学生处、校团委等相关职能部门组成的学校课程考核工作领导小组，检查课程考核的组织安排，巡查监考及考风考纪，及时应对和处理考核期间的突发事件，并进行通报。","第四条 课程考核由教务处统筹部署，学院（教学部）具体实施。学院(教学部)应成立以院长(主任)为组长的学院级课程考核工作领导小组，全面负责本学院(教学部)开设课程的考核工作。","第三章 考核方式","第五条 课程考核由学习过程考核和期末考核两部分组成，一般分为考查和考试两种方式。课程的考核方式根据人才培养方案确定，未经学校批准，不得随意更改。课程考核的具体形式和要求应在课程教学大纲中明确，并在第一节课向学生公布。","考核方式为考查的课程(以下简称考查课)一般由授课教师随堂安排期末考核；考核方式为考试的课程(以下简称考试课)","的原则上通过教务系统安排期末考试。","第四章 命题与制卷","梁大条命愿是课程善核工作的核心还节，命题内容和面。应当以课程教学大纲为依据，包括能力和知识考核两部分内容。试卷原则上应以考察学生综合运用知识和解决问题能力为主，不得命制概念性或记忆性题目。","第七条 试题题意应清晰明确，文字应准确简练，提供的数据和资料应准确；试题题型、题量和难易程度适当，能区分不同学生的水平，有相应的参考答案或评分要求。","第八条 加强考试课试题库建设，推广教考分离。试题库建设是考试管理工作规范化、标准化、科学化的基本要求，是推行教考分离，提高教学质量的必要手段。","第九条 考试课原则上应通过试题库按A、B两套试卷组卷。随机抽取一套为本场考试使用，另一套为备用试卷或补考试卷。每套试卷满分为100分，笔试考试时长一般为120分钟，特殊形式的考试时长由开课学院(教学部)确定。A、B两套试卷试题及近四年的试卷试题原则上不允许出现重复。考查课一般由课程组或授课教师根据教学大纲确定考核内容、形式。","第十条 试卷格式须遵循统一标准，包括试卷名称(含学年、学期、课程名称、试卷类型A、B卷)、试卷说明(对考试方式、试卷题量、答题时间、答题要求的简单说明)、试题等部分。","第十一条 实行教考分离课程试卷一般由专人负责送印(或领取卷)，非教考分离的试卷由授课教师或课程组负责人提前一周送印，并于开考前1一2天内领取。","第十二条 严格做好试卷保密工作。试题库应安排专人负责管理，凡接触考题的人员，要做好保密工作，不得以任何方式泄密、漏题。授课教师不得在考前给学生划定考试范围，指定考试内容，更不得以任何方式泄露试题，制卷场所严禁无关人员进入。","考前如发生试题泄密，应及时启用备用试卷，考试后若发现试题已泄密的，启用备用试卷，安排重考，同时向学校提交具体情况书面报告。追究有关人员责任，并按《安徽大学教学事故定与处理办法》有关规定处理。","第五章考核安排","第十三条学习过程考核由授课教师根据课程特点选择适当的考核形式安排考核，一般不少于3种考核形式。学院(教学部)根据实际情况督促检查，学校教学督导组随机抽查。为了加强课程学习过程考核，考试课原则上应进行期中考试。","第十四条 过程考核形式","1.课堂表现：组织学生对课程的重点、难点或部分专题内容通过课堂讨论或进行课堂提问等形式开展师生互动、生生互动，教师可根据学生的表现情况评定成绩。","2.平时作业：要求作业布置适量，精心设计，及时批改、及时反馈，严把作业质量关，确保平时作业成绩的准确性。平时作业次数一般不少于3次。","3.阶段性测验：包括周考、月考、期中考试、单元测验或随堂考试等形式。","4.综合性作业：可根据教学实际情况采取课外阅读读后感、专题学术论文、专题调研报告、案例分析、设计等非标准答案类型的多种形式综合性作业。","5.团队作业：将学生组成若干个学习小组，由教师设定学习任务，小组成员通过互助合作来完成学习任务。学习小组再根据成员表现、贡献程度评定每位成员的成绩。教师根据小组学习任务完成情况进行最终成绩评定。","6.教学实践活动：结合教学内容组织学生开展课内外实践活动，加深学生对理论知识的理解和运用。教师可根据学生在实践活动中的综合表现，如对理论知识掌握情况、运用程度及动手能力等进行成绩评定。","完只他形式；教师可根据课程转点设计其他的过程作去感。容和考核形式。并在课程教学大纲中予以明确。","第十五条 过程考核成绩管理","投课教师登录安徽大学教务管理系统，下载教学班“点名册。作为过程考核记录表使用，在平时成绩栏(“平时1”、“平时2……………填写记录过程考核成绩，同时在“教学班点名册”表格下方应往明“平时1”、“平时2”……所对应的考核形式或考核项目。","第十六条 期末考核主要表现形式为笔试(闭卷、开卷)计算机辅考试、口试、课程论文(综述)、设计(创作、临摹、写生)、表演、技能测试(军事、体育)等。","第十七条 学生应当按时参加课程各个教学环节的考核。缺课超过该课程总学时的三分之一且没有办理免听手续的，不得参加本课程期末考核，其课程考核按旷考处理。凡经批准同意免听课的学生，应按规定参加考核。","第六章 监考与巡考","第十八条 考试学生人数在80人(含80人)以内的考场安排2名监考人员；考试学生人数超过80人的需安排3名以上(含3名)监考人员。诚信考场原则上仅安排主考教师分发和回收试卷，不安排监考人员。","第十九条 专业课程的监考教师由学院(教学部)落实，全校性公共基础课程的考试(期中、期末)主监考教师由开课学院(教学部)落实，副监考教师由各学院落实(按各学院选课人数比例分配监考教师人数)。","第二十条 监考人员应为校内教师，包括主考教师(授课教师)、主监考教师和副监考教师，职责如下：","(一)主考教师职责","1.主考教师即为该门考试课的授课教师，可以担任太口，50一个考场的主监考；","2.负责在考前10分钟把试卷和《安微大学考场情况登记表(学生签到表)》送交主监考教师；","3.负责解答有关试题方面的疑问。在试卷印制完毕后发现命题有误，必须在考试前将勘误表交给主监考教师，以便考试前告知考试学生；","4.如有考试违规记录的情况，须在考试结束后一个工作日内送将《安徽大学学生考试违规行为认定记录表》和有关违规证据材料至开课学院(教学部)教学办公室。","(二)主监考教师职责","1.开考前10分钟领取并清点试卷和《安徽大学考场情况登记表(学生签到表)》；","2.宣布考场考核纪律，按时发放和收回试卷；","3.发现学生违规行为时，立即终止学生考试，及时收回试卷和违规证据，同时在《安徽大学考场情况登记表(学生签到表)》中认真做好违规等情节的记录，并现场填写《安徽大学学生考试违规行为认定记录表》，锁定考试违规证据等材料，考试结束后将有关考试违规材料送至主考教师。具体违规行为认定按《安徽大学本科学生考试违规行为认定办法》执行。","4.考试结束信号发出后，要求考试学生停止答题，将试卷整理好放在座位上。依次收取答卷，整理清点后的将试卷和《安徽大学考场情况登记表(学生签到表)》交至主考教师或开课学院(教学部)考务办公室。","(三)副监考教师职责","1.在黑板上书写座位号的编排顺序和试卷勘误表，指导学生按签到表顺序号就坐；","2.检查考试学生身份证或学生证，监督考试学生在《安徽大学考场情况登记表(学生签到表)》上签到。如发现证件不符，应令其退出考场。","A","3.考试开始后，提醒学生在试卷和答题纸(卡)上填写数名专业、学号和座位号；","1.功助主监考教师维持考场考核纪律，如发现学生违规行时，应告知主监考教师，考试结束后协助主考教师清点试卷及有关材料。","第二十一条实行以课程考核工作领导小组、督导组、学院(教学部)三级巡考制度，巡考人员职责：","1.巡考人员应以高度的责任心，做到准时到岗，尽职尽责，严格巡查，以保证学校考试的正常、顺利进行；","2.巡考人员对考前准备情况应认真检查，包括监考人员是否及时到位，考场安排是否合理，考场清场是否彻底等。如发现问题，巡考人员应及时向学校反映，能现场处理的，应给予应急处理；","3.巡考人员发现考生违规行为时，应立即向考场监考人员说明情况，督促监考人员做好《安徽大学学生考试违规行为认定记录表》的填报，如多次发现同一考场有学生违规现象时，巡考人员要做好记录，并按《安徽大学教学事故认定与处理办法》有关规定处理；","4.如发现学生不服从监考人员安排，巡考人员要协助监考人员及时进行处理，以保证考场秩序；","5.对监考人员不认真履行监考职责，违反监考纪律的，巡考人员应及时告诫并督促其改正，同时在《巡考情况记录表》中予以记录。","6. 各级巡考人员巡考结束后，按要求认真填写《巡考情况记录表》后，分别送至相应的巡考安排部门(教务处、督导组或开课学院(教学部)教学办公室)。","第七章缓考","第二十二条 缓考指学生因故无法参加某门课程的期末考试，而缓期参加该门课程的期末考试。一般在补考期间进行。","不按时参加缓考的按旷考处理，不再具有补考资格。","第二十三条 学生因有下列情况的，可以申请缓考：","1.因病无法参加考试：","2.因突发事件无法参加考试：","3.因公派交流学习等特殊原因已被准离校，无法按时返校参加考试： 4.因其它不可抗拒的原因。","第二十四条 缓考申请流程：学生须在考试前提交《安徽大学缓考申请表》，并提供有关证明材料(因病缓考须校医院开证明并提供病历原件及复印件)，经学生所在学院审核并经分管教学院长(主任)签署意见，报教务处批准。","第二十五条 经批准同意缓考的学生，该门课最终成绩以缓考卷面成绩记载。如需正常参加缓考科目的期末考试，学生应主动向学校提交情况说明，取消其缓考申请，经学校批准后方可参加期末考试，否则期末成绩无效。","第八章 考核纪律","第二十六条 参加课程考核的学生应携带本人证件(学生证或身份证)提前10分钟进入考场，并将证件放在座位左上角或右上角备查。","第二十七条参加闭卷考试的学生，除必要的文具之外，书本、资料、纸张、手机等与考试无关的物品一律不得带入考场，己带入考场的，应统一放置监考教师指定位置。参加开卷考试的学生，携带物品不得超过考试明确规定的允许范围。","第二十八条 迟到超过30分钟以上者不得进入考场，以旷考论处。","第二十九条学生进入考场后，必须按监考人员要求在《安徽大学考场情况登记表(学生签到表)》上签到。对未按监考要求签到的学生，造成成绩漏登、错登纠纷，由学生本人负责。53","第三十条答卷之前，先将试卷和各题纸上的处名、学g班级和座位号等诸项内容填写(涂)清楚。","第三十一条课程开始考试30分钟之内，考试结束面5分每，原用生不得交巷，考试明间原则上不得离开考场，如有特殊情况，需经监考人员同意方可离开。","第三十二条 在监考人员宣布考试终了时学生必须停止答题，并按监考人员要求，将试卷交给监考教师或反扣在课桌上，待监考人员清点试卷完毕并示意离开时，方可离开考场。","第三十三条 未经监考人员许可，试卷和答题纸一律不得带离考场。","第三+四条学生应独立完成答卷，严禁左顾右盼、交头接耳。一旦发现学生有考试违规或作弊行为的，参照《安徽大学本科学生考试违规行为认定办法》认定，并取消本场考试资格。","第三十五条 经认定考试违规或作弊的，按照《安徽大学学生违纪处分实施细则》处理。","第九章 评卷与成绩","第三十六条 学院(教学部)负责组织试卷评阅工作，评卷教师应按评分标准评定成绩，做到公平、公正、客观、准确。公共基础课的评卷工作由学院(教学部)组织集中进行，每式。门课程必须有两名以上教师评卷，采用封闭评卷、流水作业的形","第三十七条 课程总评成绩由学习过程考核成绩(平时成绩、期中成绩)和期末考核成绩(期末成绩、实验成绩)组成，组成比例应在课程教学大纲内明确，并在第一节课向学生公布。过程考核成绩一般不高于总评成绩的50%。","考试课采用百分制，考查课采用百分制或等级制记录成绩。查。严格学习过程考核，过程考核应详实记录，成绩评定做到有据可","第三十八条 因病等符合第一十三条情况，无法参加期中考试的学生，按照缓考流程办理请假免考手续，经批准后，期中考试成绩按期末成绩记载，旷考的学生，期中成绩记为零分。","办理免听课手续的学生，其总评成绩原则上以期末成绩为准，即成绩登录时，平时成绩和期末成绩均按期末成绩记载。","第三十九条 评阅试卷时使用红笔、正分批改，严禁使用黑笔、蓝笔、铅笔及负分批改试卷。试卷评阅应判分清晰，统分无误，每题小分累计应与总分相吻合。","第四十条 授课教师应在课程考核结束一周内完成试卷评阅和成绩评定，填写试卷分析报告及改进意见。成绩分布出现偏离情况，应分析情况，找出原因，以便在以后教学和考核中改进，不得在试卷上直接加分或减分。","第四十一条 授课教师在提交成绩前应仔细核对，确保成绩无误，一旦通过教务管理系统提交成绩，不得擅自改动。经复查确有错误者，须填写《安徽大学学生成绩修改申请表》，经学院(教学部)审核后连同试卷复印件报教务处批准后，方可改正。","第四十二条 授课教师应在课程考试结束一周内通过教务管理系统提交成绩，打印成绩单和成绩分析单，一式两份，签字后，一份随试卷装订，一份送开课学院(教学部)教学办公室保存。","第十章 试卷装订与入库","第四十三条 试卷评阅完毕，教师应按规定标准对试卷整理，以便统一装订。试卷装订整理顺序为：试卷封面、考试卷面成绩统计分析表、考场情况登记表、过程考核记录表、成绩登记表、期末A、B卷样卷和A、B卷参考答案与评分标准、全部考试答卷(按成绩单顺序排序)。","第四十四条 试卷封面正反两面内容用黑色水笔(圆珠笔)工整填写，内容要求一致。成绩登记表中的人数必须与试卷份数相同，学生考试试卷必须按成绩登记表的顺序装订成册，中间不得缺页。","第四十五条 教师对试卷按要求整理后，由学院(教学部)集中存放，学校安排人员统一装订。试卷入库之前应由学院(教学部)组织有关人员进行自查，符合要求后方可入库，试卷由各学院(教学部)按有关要求自行保管。","第四十六条 试卷应按要求装订，分类上架，以便调阅。试卷入库后的日常存取、查阅、登记等管理工作，由各学院(教学部)负责。","第四十七条 课程学习过程考核材料及成绩记录由授课教师保存4年备查，期末考试试卷及成绩记录应送至开课学院(教学部)保存6年备查。","第十一章 附 则","第四十八条补考参照本办法及《安徽大学本科学生学籍管理规定》执行。","第四十九条 本办法自2021年9月1日起施行，原《安徽大学考务管理办法》（校政（2006）23号）、《安徽大学本科课程考核补充规定》(校政(2007)62号)、《安徽大学本科课程考试缓考管理办法》（教务处（2008）37号）同时废止。","第五十条 本办法由教务处负责解释。","安徽大学学生诚信考试承诺书","诚实守信，是中华民族传统美德，是我国公民基本道德规范之一，是践行社会主义核心价值观的直接表现。作为一名当代大学生，树道德新风，立诚信根基，是我们义不容辞的责任。","为展现安徽大学学子的高尚品格，我们更应该坚苦自立、忠实不欺，行之以德，诚信做人，以实际行动传承“博学笃行、至诚至坚”的校训精神。为此，现郑重承诺以下事项：","本人已了解《国家教育考试违规处理办法(教育部33号令)》和学校制定的有关管理规定，如有违反，自愿按有关规定接受处理。","二、本人已阅读安徽大学学生手册中各项考试管理规定，愿意在考试中自觉遵守，保证按规定的程序和要求参加考试。","三、本人坚决服从考场工作人员和监考教师管理，自觉遵守考试纪律，考试诚实守信，不泄密，不违规，不作弊。","承诺人：","20 年 月 日","安徽大学学士学位授予工作实施细则","(校政(2018)25号)","第一章 总则","第一条为进一步规范学校学士学位授子工作。根据(h/车人民共和国学位条例》 《中华人民共和国学位条例暂行实施办法)《普通高等学校学生管理规定》和安徽省人民政府学位委员会有关规定以及《安徽大学学位授予工作实施细则(修订稿)》《安徽大学本科学生学籍管理规定》，制定本细则。","第二条 学士学位是高等教育本科阶段结束，学校依据国家提权和学校授予条件及程序授予的学位名称和学术称号，标志学位取得者较好地掌握了本学科的基础理论、专业知识和基本技能，并具有从事科学研究工作或担负专门技术工作的初步能力。","第三条学士学位授予工作，遵循公开、公正、公平的原则，遵守正当程序，保障学术自由，维护学术声誉。","第四条 凡遵守中国宪法和法律，遵守学术规范，符合学士学位授予标准，具有一定学术水平的安徽大学普通高等教育本科毕业生，可按照本工作细则的规定申请学士学位。","第二章 组织机构","第五条校学位(评定)委员会是全校学位工作的领导机构，负责对全校学位授予及其相关工作进行指导、监督、检查、审议职责。","第六条 院(系)学位(评定)分委员会根据本细则有关规定进行初审，并提出学士学位授予和不予授予建议名单；国际教育、中外合作、联合培养本科生管理单位根据相关文件，参照本细则有关规定进行初审，并提出学士学位授予和不予授予建议名单。","第七条 校学位(评定)委员会授权教务处，负责办理学士58学位的授予及日常管理工作。","第三章 授予标准","第八条 学校按照国务院学位委员会、安徽省人民政府学位委员会批准和备案的学科门类及专业学位授予权授予学士学位。","第九条 依据本细则申请学位者，应遵纪守法、品德良好，并具有相应学术水平：","(一)学生完成主修专业培养方案规定的各项要求，其课程学习和毕业论文(毕业设计或其他毕业实践环节)的成绩合格，经审核准予毕业：","(二)较好掌握本门学科的基础理论、专门知识和基本技能；","(三)具有从事科学研究工作或担负专门技术工作的初步能力。","(四)符合本条前三款规定要求并修满辅修专业(和主修专业不在同一学科门类下)学士学位授予最低学分要求的，可同时申请辅修学士学位。","第十条 修业期间有下列情形之一者，不授或缓授学士学位：","(一)违反国家法律受到刑事处罚的；","(二)违反校规受到记过及以上处分尚未解除的；","(三)考试舞弊受到严重警告及以上处分尚未解除的；","(四)毕业论文(设计、创作)成绩不及格的；","(五)学位论文、公开发表的研究成果存在抄袭、篡改、伪造等学术不端行为的，或者代写论文、买卖论文的；","(六)最长修业期满，仍未完成培养方案的各项要求，或未取得规定学分的。","第四章申请、评定与授予程序","第十一条学士学位资格审查按下列程序进行：","(一)院(系)学位(评定)分委员会初审","学位的授予及日常管理工作。","第三章授予标准","第八条学校按照国务院学位委员会、安徽省人民政府学位委员会批准和备案的学科门类及专业学位授予权授予学士学位。","第九条 依据本细则申请学位者，应遵纪守法、品德良好，并具有相应学术水平：","(一)学生完成主修专业培养方案规定的各项要求，其课程学习和毕业论文(毕业设计或其他毕业实践环节)的成绩合格，经审核准予毕业；","(二)较好掌握本门学科的基础理论、专门知识和基本技能；","(三)具有从事科学研究工作或担负专门技术工作的初步能力。(四)符合本条前三款规定要求并修满辅修专业（和主修专业不在同一学科门类下)学士学位授予最低学分要求的，可同时申请辅修学士学位。","第十条 修业期间有下列情形之一者，不授或缓授学士学位：","(一)违反国家法律受到刑事处罚的；","(二)违反校规受到记过及以上处分尚未解除的；","(三)考试舞弊受到严重警告及以上处分尚未解除的；","(四)毕业论文(设计、创作)成绩不及格的；","(五)学位论文、公开发表的研究成果存在抄袭、篡改、伪造等学术不端行为的，或者代写论文、买卖论文的；","(六)最长修业期满，仍未完成培养方案的各项要求，或未取得规定学分的。","第四章申请、评定与授予程序","第十一条 学士学位资格审查按下列程序进行：","(一)院(系)学位(评定)分委员会初审","院 (系)学位(评定)分委员会应于每年6月下旬前(中语冬季年业的本科生学士学位初审于每年12月下旬前)组织逐个审查本科毕业生的成绩、学分与平均学分绩点及毕业鉴定材料。院(系)学位(评定)分委员会根据本细则有关规定进行初审，并提出学士学位授予和不予授予建议名单，经院(系)学位(评定)分委员会负责人签署意见后报教务处汇总。","(二)非授予学士学位的高等学校本科毕业生申请我校学士学位，应由非授予学士学位的高等学校向我校教务处提出申请名单，经批准同意后，转由我校相关院(系)学位(评定)分委员会对非授予学士学位的高等学校推荐的本科毕业生进行审核。","(三)教务处负责对学院(系)所报建议名单汇总、复审，再统一提交校学位(评定)委员会。","(四)校学位(评定)委员会审定。","校学位(评定)委员会召开学位委员会议，对全校本科生学士学位授予进行审定并以无记名方式进行投票表决；实到会议委员须超过应到会议委员三分之二，投票表决同意超过二分之一的，授予我校学士学位。表决结果记录在案，作为学校授予或不授予本科生学士学位决定的依据。","第十二条校学位(评定)委员会经审定作出不授予学士学位决定后，各院(系)学位(评定)分委员会应将决定书送达学生本人，并告知学生如不服学校决定可向校学位(评定)委员会申请复议一次；争议由校学位(评定)委员会裁定。","第十三条 校学位(评定)委员会审定后，对于符合学士学位授予条件的申请人，授予学士学位并择期颁发证书。","第十四条 凡毕业、结业离校时未获学士学位者，在最长学习年限内，以其他修读方式完成未通过的课程或教学环节，成绩合格，达到我校毕业并授予学士学位要求，经学生本人申请，可以按上述程序补授学士学位。","第五章其他情况的处理","第十五条凡属下列情况之一者，均予以撤销学士学位并提请学校学位(评定)委员会审议决定：","(一)经查实，违反国家招生规定取得入学资格或者学籍井已核发学位证书的。","(二)经核实，在校学习期间有抄袭、剽窃等学术不端行为的","(三)以其他不正当手段获得学位证书的。","第十六条撤销学士学位的决定由学校学位（评定）委员会审议通过，经合法性审查并经校长办公会议或者校长授权的专门会议研究决定后，由学校出具撤销学位决定书并送达本人。学生拒绝签收的，以留置方式送达；已离校的，采取邮寄方式送达。无法直接联系的，利用学校网站以公告方式送达，自发布之日起至10个工作日止即视为送达。","第十七条 学生对撤销学士学位处理有异议的，可按照《安大学学生违纪处分实施细则(修订)》《安徽大学学生申诉处","(校党字(2017)75号)向学校申诉。","理办法》","第十八条 学士学位证书遗失或损坏不予补发，经本人申请，学校可开具学士学位证明书，学士学位证明书与原证书具有同等效力。","第六章 附则","第十九条本细则由校学位(评定)委员会授权教务处负责解释。","第二十条本细则自颁布之日起施行。原《安徽大学普通高费有本科生学士学位授予工作实施细则》和《安徽大学普通教有学年制木科生学士学位授予工作暂行办法)（校政(20808)","1号)同时废止。","安徽大学本科生辅修第二专业实施细制","（校政(2018)20号)","第一章 总则","第一条为进一步深化教育教学改革，发挥综合性大学的多学科优势，优化学生知识结构，培养文理交融、理工互通的高套质创新人才，更主动适应经济建设和社会发展需要，根据《中华人民共和国学位条例》《普通高等学校学生管理规定》以及《安徽大学本科学生学籍管理规定》，制定本细则。","第二条 辅修第二专业是指学业优良、学有余力的在校全日制本科生在攻读主修专业的同时，修读主修专业以外跨学科门类的第二专业，按照一定的培养方案和教学计划完成规定课程学习，获得相应证书的学习方式。","第三条 辅修第二专业工作在院(系)保证完成主修专业教学任务和本科生自愿选择的基础上进行，由教务处负责组织实施，","第二章辅修条件","第四条院(系)申办辅修第二专业的须按要求申报，应有辅修第二专业培养方案(包括课程计划、实践环节等)、教学文件(包括教学大纲、教材及参考书等)以及稳定的具有开办辅修第二专业的教学队伍和办学条件：辅修第二专业课程总学分一般不少于50学分(含毕业论文/设计学分)。","第五条学生申请辅修第二专业的须是在校全日制本科生，截至大二上学期已修满本专业60学分且平均学分绩点在2.5及以上。","第六条 学生在校期间根据自身的兴趣和需要，一般限修一个跨学科门类的第二专业；如辅修第二专业与主修专业属于同一学科门类下，将不再另授辅修第二专业学士学位。","第三章辅修教学及成绩管理","第七条辅修第二专业一般在标准学习年限的大二下至大四下之间进行，教务处定期发布工作通知；辅修第二专业学生须按通知要求申请辅修第二专业和进行选课：学生调整或退选辅修第二专业须按学校规定办理。","第八条 辅修第二专业学生选定、修完课程后，须接受规定的课程考核：对考试或考查成绩不合格者，开设院(系)可组织补考。辅修第二专业学生课程考试累计出现3门及以上不及格的。或出现1门课程不及格后经补考或重修仍不及格的，不允许做辅修第二专业毕业论文/设计，不能获得辅修学位；对其中继续修读并达到一定要求的，可颁发辅修证书。","第九条 辅修第二专业学生学籍仍在主修专业所在学院；课程成绩由开设院(系)负责。","第十条 辅修人数较多的，应单独编班，一般安排在周末和晚间教学，学生成绩计入辅修专业学籍表；辅修人数较少的，可随主修专业课程班学习，学生按照辅修专业培养方案要求按时选课，成绩默认计入主修专业学籍表，也可申请转入辅修学籍表。第十一条 已经在主修专业获得学分的课程，辅修第二专业可申请免修；辅修第二专业课程学分不可充抵主修专业课程学分。第十二条 学生未修满辅修第二专业要求学分而停止学习的为辍修生，相关学生应及时提出书面申请，并征得辅修第二专业新在院(系)批准后到教务处办理取消辅修手续。","第四章 辅修证明和学位授予","第十三条学生修满主修专业课程学分、辅修第二专业课程5学分及以上者，颁发辅修证书；修满辅修第二专业课程50及以上(含毕业论文学分)者，基于主修专业毕业证书，依主、将予以标注；经校学位委员会申核通过的，投予辅修学士第十四条学生主丝士业不能正营毕业的，不颁发辅修正括63学生不能获得主修专业学士学位证书的，不授予辅修第二专业学士学位。","第五章附则","第十五条辅修第二专业教学属于主修专业以外教学工作，学生须按照规定缴纳学习费用；对中途退出的辍修生，已交学费不予退还。","第十六条 本细则由教务处负责解释。","第十七条本细则自颁布之日起施行，原《安徽大学本科生辅修第二专业实施细则》（校政（2006）23号）同时废止。","说学管理办法","(校政(2020)58号)","第一章 总则","为进一步促进教育对外开放，加强国际合作交流，拓展学生国际化视野，规范管理我校学生海外交流学习，根据有关法律注规，结合我校实际，制订本办法。","第一条 本办法所称海外交流学习是指到学校认可的海外教育科研机构或其他组织交流学习、实习实践(含专业实习、社会调研、文化交流、带薪实习、国际组织实习、担任孔子学院志愿者等)、参加学术交流等活动，未列入的类型可参照本办法执行。","第二条 本办法所称安徽大学学生是指具有中华人民共和国国籍、安徽大学学籍的普通全日制统招本科生和研究生，不含我校中外合作办学项目学生。","第三条 学校成立学生海外交流学习领导小组(以下简称领导小组)，领导小组由分管校领导、国际合作与交流处(港澳台事务办公室)、教务处、研究生院和学生处等相关部门和单位负责同志组成，办公室设在国际合作与交流处(港澳台事务办公室)。院(系)应指定专人负责、组织和指导学生海外交流学习项目。","第四条 国际合作与交流处(港澳台事务办公室)负责拓展学生海外交流学习渠道、与海外高校洽谈签约、对外联络、指导学生办理出国(境)审批手续等。","第五条 教务处和研究生院分别负责完善本科生和研究生赴海外交流学习培养机制，为学生办理保留学籍、学分互认与成绩从定等。","第二章 申请、选拔和派出","学校海外交流学习项目遵循“公开、公平、公正”","第六条","的原则，采取自愿报名、择优录取的选派办法。","第七条 选派基本条件","(一)政治素质好，热爱祖国，品德优良，道纪守法","(二)外语能力(英语或交换地官方语言)优息，有的。院校入学要求：","(三)学习成绩良好，具有扎实的专业知识：","(四)身心健康，能圆满完成海外交流学习任务。","(五)符合海外院校规定的其他申请条件：","(六)已交清应缴的我校各项费用、具有在海外学习和的经济能力。","第八条 申请者向所在院(系)递交以下申请材料：","(一)安徽大学海外交流学习申请表：","(二)中英文简历；","(三)外语水平能力证明(如需)；","(四)交流学习计划(包括海外院校学习的课程计划)","(五)家庭经济情况证明(如需)；","(六)其它海外院校所需材料。","第九条 选派程序","(一)院(系)根据项目具体要求，依据本办法对申请学生进行初审，经学生辅导员(研究生同时须经导师)签署推荐意见，院(系)党政联席会议通过，并由院(系)主要党政负责人签署同意意见，报领导小组。","(二)领导小组根据项目要求组织选拔，依据择优录取的原则这出优秀学生，产生报推荐名单，拟推荐名单须在校内公示5个工作日。","(三)国际合作与交流处(港澳台事务办公室)负责将报准有学生名单及学生申请材料发送《或答送)至海外院校，并将海外院校录取情况通知学生本人和所在院(系)","(四)获得海外院校录取资格的待派出学生须与学校签订《安徽大学学生海外交流项目同意书》","澳台事务办公室)的指导下办理校内审批手续。","(五)学生自行办理护照(通行证)、签证(签注)、机票购买保险购买、海外院校相关费用缴纳等，学生取得签证(签注)后。应及时向学校领导小组报备。","第十条 院(系)组织的海外交流项目须按要求办理出国(境)","审批手续。","第三章 海外学习管理","第十一条 交流学生抵达海外院校后，应于一周内将报到情况及个人联系方式向领导小组、所在院(系)报备，在外学习期间。每月向领导小组办公室、所在院(系)报告交流学习情况。","第十二条 交流学生在海外交流学习期间，所在院(系)应具体承担学生的管理职责，安排辅导员或其他相关工作人员负责管理和联系，保障其在籍期间权利和义务。","第十三条 交流学生在海外交流学习期间，我校为其保留学籍：学习期间被海外院校除名者，我校根据有关规定进一步处理。","第十四条 交流学生在结束海外学习后，必须按期返校。交流学生在海外学习期间，未经学校批准，不得以任何理由延长在外停留期限、转往他校学习或转往第三国(地区)居留。违反者将取消安徽大学学籍、不予颁发毕业证书和学位证书。","第十五条交流学生因不可抗拒因素不能在海外完成学习任务的，由本人申请返校继续学习，经学校同意后，可插入原专业学习。 第十六条交流学生在海外学习期间，应遵守我国及学习所","(地区)的法律、法规和两校规章制度，尊重当地人民的风俗习惯和宗教信仰，努力学习专业知识：应遵守外事纪律，往在国家人身安全，不做有损国家尊严的事情，遇到关系国家和学校利及声帮的重大事件应及时向我国柱当地使能的成机构和学校强4.如有违法违纪行为，学校将依据有关规定给予相应处分 67","第六章 其它","第二十五条交流学生返校后，应于两周内向所在院(系报到，提交海外交流学习总结。所在院(系)应及时举办座谈报告会，由交流学生向本院(系)学生和老师汇报在海外学习心得体会和所见所闻。","第二十六条本办法自公布之日起施行，由国际合作与处(港澳台事务办公室)、教务处和研究生院负责解释。《大学学生出国(境)学习管理规定》(校政(2009)16号)及换生在国(境)外学习成绩互认的补充说明》同时废止。","第四章 成绩认定","交流学生在海外学习期间，如无法参加我校识有","第十七条","识资学习及考试，应及时退进已选课程，如可以参加课程考说，但无法参加全部成部分课程课堂学习的，可在学校统一选课结说前提出申请，办理免听手续，期末考试成绩作为总评成绩。","第十八条 海外院校学习课程应尽可能与我校本专业培养方案教育模块所列出的课程一致或相近。交流学生在海外学习期间，完整修读一门及以上专业课程，可回校兑换原专业培养方案课程。未修读专业课程，如获得海外院校成绩认定的，兑换我校相应模块学分；仅参加文化参访等短期交流项目的，不予兑换学分。","第十九条 交流学生须在派出前向所在院(系)和学校教务处(研究生院)提交《安徽大学学生海外学习修读课程计划表》(以下简称《计划表》)；赴海外学习后，如需更改《计划表》，须经院(系)和学校教务处(研究生院)同意，并提交更改后的《计划表》；《计划表》课程及其学分总量须与所在专业“人才培养方案”课程相符；在海外院校所修课程须与《计划表》相符或基本相符。","第二十条 交流学生在海外院校所取得的学习成绩证明，应于学习结束后一个月内提交原所在院(系)，院(系)根据学生所在专业培养方案的教育模块和《计划表》进行成绩(学分)认定，由教务处(研究生院)审核后登录成绩。","学分认定原则如下：","(一)海外高校为世界排名前200名(以申请项目时最新公布的QS/NS news/Times世界大学排名为准)，课程学分按照我校学分置换，课程成绩按照以下方式折算：","1.按百分数计算的课程成绩，根据该门课程的实际成绩上浮一个等级后所对应的该等级的分数计算，但不超过100分；","2.按等级制计算的课程成绩，在该门课程实际等级基础上，上浮一个等级，但不超过最高等级；","3.课程实际成绩不及格，不允许进行课程成绩折算。","(二)海外高校为世界排名200名以外高校，依据对方教务部门提供的实际评定成绩认定。","(三)海外院校课程成绩评分标准和我校不一致的，按照百分制折算。如遇特殊情况，由教务处(研究生院)单独研究确定。","(四)派出交流学生因时间延误考试的部分课程，可以申请缓考：可以缓考的课程范围及申请程序、成绩登录按学校相关文件规定执行。","第二十一条 中外合作办学招生的学生，在达到录取当年招生章程中明确规定的我校毕业证书、学位证书授予条件下，可向学校申请毕业及授予学位。","完整参加校际“2+2”、“3+1”等双学位联合培养的交流学生，在外出学习前，由所在院(系)党政联席会和学位分委员会明确本专业毕业及学位授予条件，报教务处及国际合作与交流处(港澳台事务办公室)备案，并及时告知学生。学生在获颁海外院校学位证书后，按照派出前确定的条件向学校申请授予相应毕业、学位证书。未完整参加的，可按照学分兑换程序返校后进行相应学分兑换，达到安徽大学毕业和学位授予条件的，授予相应的毕业证书和学位证书。","第五章 有关费用","第二十二条 赴海外交流学习的学生，须正常缴纳我校学费。学校可根据项目情况减免全部或部分学费(学籍注册费、学分费)。中途因个人原因退出项目的，须补缴相应学费。","第二十三条 完整参加校际“2+2”“3+1”等双学位联合培养，获颁海外院校学位的交流学生，可向学校申请减免在海外期间的安徽大学学费。","第二十四条 在外期间需要退出校内宿舍的，可以依据学校有关规定申请退宿。如果交换项目包含互免住宿费，须交纳我校69住宿费。","第六章 其它","第二十五条 交流学生返校后，应于两周内向所在院(系)报到，提交海外交流学习总结。所在院(系)应及时举办座谈会报告会，由交流学生向本院(系)学生和老师汇报在海外学习的心得体会和所见所闻。","第二十六条 本办法自公布之日起施行，由国际合作与交流处(港澳台事务办公室)、教务处和研究生院负责解释。《安徽大学学生出国(境)学习管理规定》(校政(2009)16号)及《交换生在国(境)外学习成绩互认的补充说明》同时废止。","安徽大学联合培养类本科学生管理暂行办法(校政(2012)6号)","第一条为促进联合办学有序发展，进一步规范我校联合培养类本科学生外出学习期间的管理，结合我校实际，特制定本办法。解入接养是指学校为了深化教育教学改革，结合自身学科优势及特色创立的与国内外高校、教学机构、科研院所等联合培养人才的新机制。","第三条 联合培养学生应当遵守《高等学校学生行为准则》、《安徽大学学生管理规定》、《安徽大学本科学生学籍管理规定》以及学校与联合培养单位签订的协议规定。","第四条 申请联合培养的学生需由学生本人征得家长的有效认可。学校或院(系)须与联合培养单位及学生本人签订三方协议，明确学生外出学习期间安全等方面的责任。","第五条 院(系)要对联合培养学生开展行前教育，告知学生在外学习期间的权利及义务，指导学生履行相关手续，教育学生高度重视自身人身和财产安全，防止各种事故的发生。","第六条 联合培养学生外出学习期间不需要转移党团组织关系，院(系)要在联合培养学生中建立党团组织，并通过编班或分组进行管理。","第七条 院(系)要关心联合培养学生在外学习期间的学习和生活，指定专人负责，定期与学生联系，做好学生联络方式等相关信息的收集和数据统计工作，帮助学生解决在外学习中遇到的困难。","第八条 联合培养学生在外学习期间须遵守培养单位各项规章制度，服从培养单位管理。","第九条 凡参加城镇居民基本医疗保险的联合培养学生，生病就诊时须选择联合培养单位指定的医疗机构或当地公立医院，71在技外学习期间的基本医疗保险按《安徽大学在校大学生参加城镇居民基本医疗保险实施办法(试行)》执行。","第十条 学生返校参加研究生招生考试、办理毕业离校手续等事务期间，经本人申请、院(系)审核同意后，由所在院(系)向物业管理部门提出住宿申请。住宿时间在30天之内(含30天)只需缴纳住宿期间使用的水电费，超过30天的须按实际住宿天数向学校缴纳住宿费。院(系)须按期将使用完毕的宿舍交还物业管理部门。","第十一条 联合培养学生在外学习期间涉及的其他问题，由学校和院(系)与联合培养单位共同协商处理。","第十二条 本办法自印发之日起施行，由学生处(党委学工部)负责解释。","安徽大学本专科生延期毕业管理办法","(校政(2019)36号)","第一章 总则","第一条 为进一步加强学校延期毕业学生的管理，根据《安徽大学学生管理办法(修订)》及《安徽大学本科学生学籍管理规定（修订）》(校党字(2017)75号)等有关文件精神，结合工作实际，制定本办法。","第二条 本办法适用于在我校接受普通高等学历教育的全日制本专科生。","第二章 学习及日常管理","第三条 标准学习年限(本科一般专业4年，特殊专业5年；专科专业3年)结束，未能修满专业培养方案所规定最低学分要求者为延期毕业学生。","第四条 延期毕业学生须由本人向所在院(系)提出延长学习期限申请并经教务处审核批准，延长时间不得超过最长学习年限(本科一般专业6年，特殊专业7年；专科专业5年)。申请条件如下：","(一)具有注册学籍：","(二)未能在标准学习年限内完成主修专业培养方案中规定的毕业最低学分及各模块要求学分；","第五条 延期毕业学生延期学习方式主要为“在校插班学习”、“离校免听学习(免听不免考，即学生须按时返校参加课程考试)”两种：八应下者的，应留校编入相应专业下一年级继续修读，否则将作为自动退学处理；","(二)已获得总学分在150学分及以上的，本人选课后可申请免听，经院(系)同意、教务处批准，可参加相应学分课程考试。73","第六条延用半业学生应当按规定履行报到注册等手练，注册的学生按学校相关规定处理。","第七条 相关院(系)应将延期毕业学生纳入所在学院学生日常教育和管理，严格区分学生延期毕业的原因，分类指导，精准施筑，坚持围绕学生、关照学生、服务学生，积极探索加强延期毕业学生管理的有效途径。","第八条 根据实际情况，相关院(系)应安排专人负责延期毕业学生，并做好交接工作，包括通报学生基本情况、移交相关材料等。","第九条 相关院(系)应高度重视因学业问题导致延期毕业的学生的学习、生活以及身心状况，帮助此类群体分析自身存在的问题，监督养成良好的学习习惯，加大帮扶支持力度。","第三章 结业处理","第十条 延期毕业学生可申请结业处理，相关问题规定如下：","(一)学生获得本专业毕业所需总学分75%以上，且其他方面达到毕业要求，准予申请结业。由学校发给结业证书。","(二)在最长学习年限内，允许学生在结业后以旁听方式修读未通过的课程(或者教学环节)，成绩合格，符合毕业要求者可换发毕业证书，毕业时间按发证日期填写；满足学士学位授予条件者，可获得相应的学士学位。","(三)学生结业后旁听修读课程或教学环节期间如有违反学校纪律或弄虚作假行为的，不予换发毕业证书。","(四)结业学生不具有安徽大学学籍，不再享受安徽大学在校生的待遇。","(五)结业学生的旁听收费标准按照学校财务相关规定执行。第十一条 延期毕业学生结业、毕业、退学后，相关院(系)及学校相关部门应敦促学生办理相应离校手续，并予以就业派造、档案转递等相关手续。","ANHUI UN 教学管理","第四章附则","第十二条","本办法由学生处、教务处负责解释。","第十三条本办法自公布之日起执行。","安徽大学本硕博一体化贯通培养试点实施办法","(校政(2025)1号)","第一章 总则","第一条 为深入贯彻党的二十大和二十届二中、三中全会以及全国教育大会精神，积极探索高等教育普及化背景下高水平大学拔尖创新人才培养途径，进一步深化教育教学综合改革、全面提高人才培养质量，结合学校实际，制订本办法。","第二章 学科专业","第二条 本硕博贯通实验班(以下简称“实验班”)主要由学科优势明显、师资力量雄厚、科研能力较强的培养单位承办，开设专业原则上为国家级一流本科专业且具有相应博士学位授予点的优势特色学科专业。","第三条 优先在文史哲、数理化生、计算机、量子信息科学等优势基础学科专业，材料科学与工程、人工智能、集成电路、新能源汽车等特色新工科专业和涉外法治、国际新闻与传播等特色新文科专业试点开办与硕博研究生贯通培养的“实验班”。","第三章 贯通培养模式","第四条 “实验班”贯通培养模式有以下两种。","1.本校贯通。实施“3+1+X”学制的“本硕博”贯通式人才培养，其中“3”为本科阶段，“1”为获得推荐免试硕士研究生(含直博生)资格后进入本校硕士研究生课程学习和科研训练阶段，“X”为硕博阶段，3+1的培养计划完成后授予学士学位，1+X的培养计划完成后授予硕士或博士学位。","2.国(境)内外知名高校贯通。依托与国内高水平大学联合培养协议、中外合作办学项目等，开展本硕博联合培养。国内贯通学制与本校贯通一致，“1”为获得推荐免试硕士研究生(含直博生)资格后进入外校硕士研究生课程学习和科研训练阶段。国际化贯通采用“3+1+1”或“2+2+1”模式，前3或2年为国内本科阶段，中间1或2年在国外完成专业学习并获得国外学士学位，同时获得国内学士学位，最后1年在国外攻读硕士学位。","第五条 制定一体化培养方案。在完整的本科教育课程体系基础上，以提升学术素养和创新能力为核心，重点围绕科研训练和国际交流，构建“本科生创新项目/科研训练/学科竞赛-本科毕业论文(设计、创作)-硕博研究方向”全程贯通式课程体系。","第六条 实施全程化导师指导。由师德高尚、学术精湛、育人有道的国家级人才担任导师，依托“大师+团队”的博士生导师科研小组，建立导师团队集体指导、集体把关的责任机制。","第四章 学生管理","第七条 本校贯通的实验班学生在第四学年第一学期选拔，培养单位负责制定本单位实验班遴选办法和组织遴选工作。国(境)内外贯通的实验班学生管理按照合作协议执行。","第八条 各相关培养单位要按照本办法，制定本单位实验班实施管理细则。","第九条 实验班本科阶段建设和学生管理工作由教务处、学生处负责，本校贯通的研究生阶段建设和学生管理工作由研究生院负责。","第十条 实验班学生的其他管理均按照普通本科生和研究生的相关管理制度执行。","第五章 附则","第十一条 本办法由教务处、研究生院负责解释。","第十二条 本办法自印发之日起施行。","安徽大学微专业管理办法(试行)","(校政(2025)81号)","第一章 总则","第一条 为深入学习贯彻党的二十大和二十届历次全会精神，全面贯彻落实习近平总书记关于教育的重要论述，落实《教育强国建设规划纲要(2024—2035年)》《高等教育学科专业设置调整优化行动方案(2025-2027年)》，按照教育部实施高校学生就业能力提升“双千”计划和安徽省政府《深化高校学科专业结构改革服务产业创新发展实施方案(2022-2025年)》，自主开展微专业建设，更好地服务安徽新兴产业、主导产业和未来产业发展需求，结合学校实际，制订本办法。","第二条 微专业是指在本科专业目录以外，立足经济社会发展对人才的需求，围绕产业发展趋势和市场需求变化，学校自主设置的专业。旨在整合各方资源开设一组专业核心课程，通过灵活、系统的培养，满足学生个性化发展和多样化需求，提高学生知识结构的复合性和就业竞争力，提升与社会需求的匹配度。","第三条 微专业建设目标是发挥学科专业优势特色，探索复合型人才培养新模式，围绕新材料、人工智能、集成电路、新能源汽车、生物医药、涉外法治、国际营销等新兴产业和关键领域相关学科专业素养或行业从业能力，结合拔尖创新人才培养，深化科教融汇、产教融合，面向学科深度交叉融合发展方向，坚持面向市场、促进就业，突出人才自主培养重点，支持学有余力的学生跨学科、跨专业学习，大力培养复合型拔尖创新人才。","第四条 微专业教育为非学历教育，纳入学校本科教学管理体系，遵循学校本科教学的相关管理规定。","第二章 组织管理与课程设置","第五条 学校负责微专业设置规划，人才培养方案审定、教学质量监控、证书发放等。学院负责微专业专业设置论证、人才培养方案制定、组织报名和教学组织(包括授课、考试安排、成绩录入、结业资格审核、相关材料存档)等。","第六条 现有本科专业可根据专业特色及人才培养需求，鼓励学院联合行业协会、科研院所共同制定专业培养方案，共同建设课程，共同评价课程；鼓励与企业合作开发基于真实项目的课程；鼓励跨单位、跨学院、跨学科、跨专业组建微专业教学团队；鼓励高校间就优势领域合作开发课程，实现资源共享。促进学生综合素质、应用实践能力及创新能力发展。原则上微专业总课程门数为3-5门，总学分为6-15学分。","第七条 原则上学生数不低于10人，即可单独编班组织教学，每个教学班不超过30人。原则上采用项目化方式开展教学，可采用线上、线下、线上线下混合教学方式。微专业课程应该安排在学校非主修时段授课。","第三章 修读要求","第八条 微专业原则上在每个秋季学期开课。学生在校期间根据兴趣仅可申请1个微专业，最长修读时间为1学年。","第九条 微专业课程原则上在教学周第12周之前完成考核，修读微专业的学生须参加该专业的所有课程的学习和考核。学生超过最长修读时间或出现不及格后直接退出微专业学习。","第十条 微专业课程独立于主修专业课程之外，课程学习成绩记入微专业成绩单。","第四章 证书发放","第十一条 修读微专业的学生，须在主修专业毕业前按要求完成所选微专业全部课程学习且考核成绩合格，将在主修专业毕业时由学校颁发微专业证书。","第十二条 鼓励联合行业协会、科研院所共同颁发结业证书；鼓励与企业合作实施以证代考，让学生通过微专业学习取得相应资格证书。","第五章 附则","第十三条 本办法自发布之日起施行，由教务处负责解释。","安徽大学本科学生学年考核办法","(校政(2009)25号)","第一条 为培养学生优良的品行操守，引导学生德智体美全面发展，促进校风、学风建设，根据《高等学校学生行为准则》和《安徽大学学生管理规定》，制订本办法。","第二条 学年考核内容及分值","(一)思想信念(10分)：志存高远，坚定信念，追求真理，崇尚科学；","(二)公民意识(10分)：热爱祖国，遵守社会公德，正确行使公民权利、履行公民义务，有社会责任感，甘愿为祖国为人民奉献；","(三)遵纪守法(10分)：遵守宪法和法律法规，遵守校纪校规，自觉维护校园秩序，敢于和善于同各种违法违纪行为作斗争；","(四)尊师爱校(10分)：积极践行校训精神，明礼修身，尊敬师长，团结友爱，爱护校园各项设施和环境，维护学校声誉；","(五)团队意识(10分)：关心集体、乐于助人，与同学融洽相处，具有良好的沟通、协调和合作意识，维护集体利益；","(六)学习态度(10分)：勤于学习、善于思考，热爱所学专业，学习目的明确，学风严谨扎实，遵从学术规范，恪守学术道德；","(七)诚实守信(10分)：敬廉崇洁、公道正派，履约践诺、知行统一，自尊自爱、自省自律，文明使用互联网：","(八)创新意识(10分)：坚持理论与实践相结合，积极参加实践实验活动，不断增强创新意识；","(九)身心状况(10分)：热爱生活、珍爱生命，积极参加体育锻炼，不怕挫折、磨练意志，不断提高环境适应能力，保持身心健康；","(十)生活习惯(10分)：生活情趣健康，讲究卫生，有良好的生活习惯，艰苦奋斗、勤俭节约，珍惜资源、保护环境。77","第三条 学年考核等次的划分和限定条件","第学年有钱结果分为优秀、自好，合格和不合格四个。老民得分在0分以上(含90分)者为香落决：考校的的。本以《含75分)者为良好等飞。其余为合格等决，但在考钱明？有下列情况之一者，无论考核得分多少均为不合格等次：","(一)违反宪法和法律法规，受到处罚的；","(二)违反校纪校规，受到处分的。","第四条 学年考核程序","学生学年考核以班级为单位每学年开展一次，由辅导员组织实施，各班级成立学年考核小组，考核小组成员由班长、团支部书记和寝室代表组成，寝室代表由各寝室民主推荐产生，考核工作按下列程序进行：","(一)个人小结。学生对照学年考核内容和院系的有关要求，对自己的品行表现进行评价和总结，填写《安徽大学本科学生学年考核登记表》；","(二)班级考评。班级学年考核小组根据班日志记录和学生的平时表现，对每一个同学进行逐项打分，并计算总分；","(三)等级确定。辅导员依据班级学年考核小组评分和不合格等次的限定条件，确定学生的考核等次。","学校各部门可以通过学生处对学生的学年考核提出意见，各班级辅导员在确定考核等级时应当予以充分考虑；","(四)存档。班级学年考核小组评分和学生的考核等次在班级范围内公示5个工作日，无异议后报院系审核。院系审核同意后，由辅导员将学生的考核等次载入《安徽大学本科学生学年考核登记表》，并报学生处存档。","学生对考核结果有异议的，可以向院系或者学生处反映，院系或者学生处应当予以妥善处理。","第五条 学年考核结果的使用","学年考核结果作为学生评奖、评优、推荐免试研究生和就业78提书的重要依据，对学年考核成绩较差的学生子以批评或者告说。","第六条 考核实施细则由学生处根据本办法制定。","第七条 本办法自2009年9月1日起施行，由学生处负责解释，原《安徽大学本科学生品行考核暂行办法》 (校政(2007)55号)即行废止。","安徽大学本科学生奖学金评选办法","(校政(2013) 23号)","第一条为实出立语树人理念，鼓励学生的奋学习，积极到。社会活动，培养学生实践精神和创新能力，促进学生德、智、你美等方面全面发展，培养合格人才，制定本办法。","第三条 木科学生奖学金所设奖项分别为安徽大学校长笑学金、优秀学生奖学金、学术科技奖学金、学习优秀奖学金、社会实践奖学金、团学工作奖学金和文体活动奖学金。","第三条 各项奖学金获得者必须同时符合奖学金基本条件和名单项奖的具体条件。基本条件如下：","(一)学年考核等次在良好以上(含良好)；","(二)平均学分绩点在2.0以上(含2.0)；","(三)按规定交纳学费，无擅自拖欠学费行为；","(四)每学期参加社会公益活动不少于2次。","第四条 安徽大学校长奖学金","安徽大学校长奖学金用于奖励在道德品行、学术科技以及其他方面取得重大成绩或者有非常突出表现，为学校赢得广泛声誉的学生个人或团队，奖励名额和金额由学校学生资助工作领导小组研究决定。","第五条 优秀学生奖学金","(一)优秀学生奖学金用于奖励品行优良、学习优秀、在学术科技、社会实践等活动中表现优异的学生；","(二)优秀学生奖学金评选比例不超过参评学生数的2%，奖励金额为5000元/人；","(三)优秀学生奖学金评选条件为：学年考核优秀，平均学分绩点排名原则上应在班(年)级前10%，在学术科技、社会实践、团学工作或文体活动等某一方面表现突出。","第六条 学术科技奖学金","ANHUI GNIVERS 评奖评化","(一)学术科技奖用于奖励在学术科技活动中取得突出成练的学生； (二)学术科技奖设团队和个人两个奖项，奖励金额为团队等实5000元/队，团队二等奖4000元/队，团队三等奖30元 队：个人一等奖3000元/人，个人二等奖2000元/人，个人三等奖1000元/人；","(三)学术科技奖由学校统一评定，不作名额限制。","第七条 学习优秀奖学金","(一)学习优秀奖用于奖励在学习上取得优秀成绩的学生：","(二)学习优秀奖设一等奖、二等奖、三等奖。其中，一等奖不超过参评学生数的3%，奖励金额为2000元/人；二等奖不超过参评学生数的6%，奖励金额为1200元/人；三等奖不超过参评学生数的16%，奖励金额为800元/人；","(三)学习优秀奖以学年平均学分绩点为主要评审依据，评选条件为每一学期取得14学分以上(含14学分)、学年平均学分绩点2.7(含2.7)以上以及学年平均学分绩点排名在班(年)级前50%。学分绩点的计算按照《安徽大学本科学生学籍管理规定》执行。","第八条 社会实践奖学金","(一)社会实践奖用于奖励在社会实践、实习、实验等活动中表现突出的学生；","(二)社会实践奖的评选比例不超过参评学生数的3%，奖励金额为800元／人。","第九条 团学工作奖学金","(一)团学工作奖用于奖励在学生工作和共青团工作中表现突出的学生；","(二)团学工作奖的评选比例不超过参评学生数的3%，奖励金额为800元/人。","第十条 文体活动奖学金","二文体活动奖用于奖的在文化艺术或在体有语动的。突出成绩的学生；","也是体活动笑的平法比例不超过参评学生数的3我，共的金额为800元/人。","第十一条 评选程序","来科学生关学金每学年评审一次，评审工作在学校学生统助工作领导小组的统一领导下进行，学生处负责奖学金评审的组织、伤调工作，各院(系)的评奖工作由院(系)学生资助工作领导小组负责，具体程序如下：","(一)个人申请。学生本人对照奖学金评选条件，提出书面申请，如实介绍各方面表现情况。","(二)班级评议。班委会、团支部在辅导员的指导下，对提出奖学金申请的学生进行评议，根据评议结果推荐获奖候选人及获奖等级。","(三)联合评议。学校图书馆、保卫处、后勤服务中心等单位对推荐获得奖学金的学生进行联合评议。","(四)院(系)评审推荐。院(系)学生资助工作领导小组按学校规定的比例和条件，对优秀学生奖学金、学习优秀奖、社会实践奖、团学工作奖、文体活动奖等奖项进行评选，并按规定的条件推荐安徽大学校长奖及学术科技奖候选人。推荐结果应当在院(系)范围内张榜公示5个工作日，公示无异议后报学生处。","(五)学校评审。学校学生资助工作领导小组对院(系)各项奖学金评选和推荐情况进行审核，确定各项奖学金的获奖学生。","第十二条 表彰与奖励","(一)学校向获奖学生颁发荣誉证书及奖金；","(二)获奖情况载入学生档案。","第十三条 优秀学生奖学金与学术科技奖、学习优秀奖、社会实践奖、团学工作奖及文体活动奖不可兼得。","第十四条 院(系)评选社会实践奖、团学工作奖和文体活动82安微大学本专科生国家类学金管理实施细制(修订)","(校政(2021)55号)","第一条为进一步规范我校本专科生国家奖学金管理工作，根据《教育部财政部关于印发<本专科生国家奖学金评审办法》的通知》(教财函(2019)105号)和《安徽省本专科生国家奖学金实施细则》(院财教(2019)914号)，结合工作实际，制定本细则。","第二条 国家奖学金奖励对象为在我校接受普通高等学历教育的本、专科二年级以上(含二年级)学生中特别优秀的学生。","第三条 国家奖学金的奖励标准为每人每年8000元。","第四条 申请条件","(一)具有中华人民共和国国籍；","(二)热爱社会主义祖国，拥护中国共产党的领导；","(三)遵守宪法和法律，遵守学校规章制度；","(四)诚实守信，道德品质优良，学年考核为优秀；","(五)在校期间学习成绩优异，创新能力、社会实践、综合素质等方面特别突出。学生学习成绩优异的量化标准是平均学分绩点排名在评选范围内位于前10%，且没有不及格科目。对于平均学分绩点没有进入前10%，但达到前30%的学生，如在其他方面表现非常突出，也可申请国家奖学金，但需提交详细的证明材料，证明材料须经学院审核盖章。","其他方面表现非常突出是指在道德风尚、学术研究、学科竞赛、创新发明、社会实践、社会工作、体育竞赛、艺术展演等某一方面表现特别优秀。具体如下：","1、在社会主义精神文明建设中表现突出，具有见义勇为、助人为乐、奉献爱心、服务社会、自立自强的实际行动，在本校、本地区产生重大影响，在全国产生较大影响，有助干树立白心，社会风尚。","2、在学术研究上取得显著成绩，以第一作者发表的通过专案重定的高水平论文，以第一、二作者出版的通过专家鉴定的学来专著。 3、在学科竞赛方面取得显著成绩，在国际和全国性专业学科竞赛、课外学术科技竞赛、中国“互联网+”大学生创新创业大赛等竞赛中获一等奖(或金奖)及以上奖励。","4、在创新发明方面取得显著成绩，科研成果获省、部级以上奖励或获得通过专家鉴定的国家专利(不包括实用新型专利、外观设计专利)。","5、在体育竞赛中取得显著成绩，为国家争得荣誉。非体育专业学生参加省级以上体育比赛获得个人项目前三名，集体项目前二名、高水平运动员参加国际和全国性体育比赛获得个人项目前三名、集体项目前二名。集体项目应为上场主力队员。","6、在艺术展演方面取得显著成绩，参加全国大学生艺术展演获得一、二等奖，参加省级艺术展演获得一等奖；艺术类专业学生参加国际和全国性比赛获得前三名。集体项目应为主要演员。","7、获全国十大杰出青年、中国青年五四奖章、中国大学生年度人物等全国性荣誉称号。","8、其它应当认定为表现非常突出的情形。","第五条 评审程序","(一)本人申请。学生本人对照国家奖学金评选条件，提出申请，如实介绍各方面表现情况。","(二)班级评议。申请人所在班级在辅导员的指导下，对提出申请的学生进行评议，根据评议结果推荐国家奖学金候选人。","(三)学院评选、推荐。学院资助工作领导组按照规定的比例和条件，对推荐人选进行评选、推荐。评选和推荐结果须在学院内公示5个工作日，无异议后，报学校评审。","(四)学校评审。学生处对各学院推荐人选汇总审核，提出当年国家奖学金获奖学生建议名单，报学校学生资助工作领导小85组审定后，在全校公示5个工作日。公示无异议后，报上级主管部门审查。","(五)经上级主管部门审批同意，学校向获奖学生发放奖金和荣誉证书，并将获奖情况记入学生档案。","第六条 监督管理","(一)同一学年内，获得国家奖学金的家庭经济困难学生可以同时申请并获得国家助学金，但不能同时申请国家励志奖学金。","(二)学生获国家奖学金后，如发现有违法违纪或在评审中弄虚作假行为的，一经核实，取消获奖资格，并按有关规定给予纪律处分。","第七条 本细则由党委学生工作部、学生处(学生发展中心)负责解释。","第八条 本细则自印发之日起施行。原《安徽大学国家奖学金实施细则(修订)》(校政(2017)15号)同时废止。","安微大学本专科生国家励志奖学金管理实施细则(修订)","(校政(2021)55号)","第一条 为进一步规范我校本专科生国家励志奖学金管理工花，根据《普通本科高校、高等职业学校国家励志奖学金管理暂行办法》和《安徽省本专科生国家励志奖学金实施细则》(皖财教(2019)914号)，结合工作实际，制定本细则。","第二条 国家励志奖学金奖励资助对象为在我校接受普通高等学历教育的本、专科二年级以上(含二年级学生中品学兼优、家庭经济困难的学生。","第三条 国家励志奖学金的奖励标准为每人每年5000元。","第四条 申请条件","(一)具有中华人民共和国国籍；","(二)热爱社会主义祖国，拥护中国共产党的领导；","(三)遵守宪法和法律，遵守学校规章制度；","(四)诚实守信，品质优良，学年考核良好及以上；","(五)在校期间学习成绩优秀，原则上要求平均学分绩点排名在评选范围内位于前30%，且必修课程无不及格科目；","(六)家庭经济困难，生活俭朴。","第五条 评审程序","(一)本人申请。学生本人对照国家励志奖学金评选条件，提出申请，如实介绍各方面表现情况。","(二)班级评议。申请人所在班级在辅导员的指导下，对提出申请的学生进行评议，根据评议结果推荐国家励志奖学金候选人。","(三)学院评选、推荐。学院资助工作领导组按照规定的比例和条件，对推荐人选进行评选、推荐。评选和推荐结果须在学院内公示5个工作日，无异议后，报学校审核。","事盛大学 UL UNIVERSITY","(四)学校评审。学生处对各学院推荐人选汇危审核，提出当年国家励志奖学金获奖学生建议名单，报学校学生资助工作名导小组审定后，在全校公示5个工作日。公示无异议后，报上级主管部门审查。","(五)经上级主管部门审批同意，学校向获奖学生发放奖金和荣誉证书，并将获奖情况记入学生档案。","第六条 监督管理","(一)同一学年内，获得国家励志奖学金的家庭经济困难学生可以同时申请并获得国家助学金，但不能同时申请国家奖学金；","(二)学生获国家励志奖学金后，如发现有违法违纪或在评审中弄虚作假行为的，一经核实，取消获奖资格，并按有关规定给予纪律处分。","第七条 本细则由党委学生工作部、学生处(学生发展中心)负责解释。","第八条 本细则自印发之日起施行。原《安徽大学国家励志奖学金实施细则(修订)》(校政(2017)15号)同时废止。","安徽大学服兵役学生国家教育资助实施细则","（校政〔2025〕49号）","第一条　为推进国防和军队现代化建设，规范我校应征入伍服兵役学生国家教育资助管理工作，根据《财政部　教育部　人力资源社会保障部　退役军人事务部　中央军委国防动员部关于印发学生资助资金管理办法的通知》（财教〔2021〕310号）、《教育部等四部门关于调整完善助学贷款有关政策的通知》（教财〔2023〕4号）、《安徽省服兵役高等学校学生国家教育资助实施细则》（皖财教〔2023〕508号）和《关于调整完善国家助学贷款有关政策的通知》（财教〔2024〕188号），结合工作实际，制定本细则。","第二条　服兵役学生国家教育资助对象为我校全日制普通本专科、第二学士学位、研究生中的毕业生、在校生和入学新生。","第三条　应征入伍服兵役学生国家教育资助主要包括学费补偿、国家助学贷款代偿和学费减免。对应征入伍服义务兵役、招收为军士的学生，在入伍时对其在校期间缴纳的学费实行一次性补偿或用于学费的国家助学贷款实行代偿；对应征入伍服义务兵役前在校就读的学生（含按国家招生规定录取的高校新生），服役期间按国家有关规定保留学籍或入学资格、退役后自愿复学或入学的，实行学费减免；对退役后，自主就业，通过全国统一高考等方式考入我校并到校报到的入学新生，实行学费减免。","第四条　学费补偿或国家助学贷款代偿金额，按学生实际缴纳的学费或用于学费的国家助学贷款（包括本金及其全部偿还之前产生的利息，下同）两者金额较高者执行；复学或新生入学后学费减免金额，按学校实际收取学费金额执行。","学费补偿、国家助学贷款代偿以及学费减免的标准，本专科生每生每年最高不超过20000元，研究生每生每年最高不超过25000元。超出标准部分不予补偿、代偿或减免。","第五条　下列学生不享受以上国家资助：","（一）在校期间已通过其他方式免除全部学费的学生；","（二）定向生（定向培养军士除外）、委培生；","（三）其他不属于服义务兵役或招收军士到部队入伍的学生。","第六条　获学费补偿学生在校期间获得国家助学贷款的，补偿资金应当首先用于偿还国家助学贷款。","第七条　获得国家助学贷款的在校生应征入伍后，国家助学贷款停止发放。","第八条　学费补偿、贷款代偿或学费减免资助期限为全日制普通高等学历教育一个学制期。对复学或入学后攻读更高层次学历的不在学费减免范围之内；攻读更高层次学历后二次入伍，可以类比第一次入伍享受更高层次学历教育阶段的资助。","学费补偿、贷款代偿或学费减免资助年限按照我校本专科、研究生规定的基本修业年限据实计算。以入伍时间为准，入伍前已完成规定的修业年限，即为学费补偿或国家助学贷款代偿的年限；退役复学后接续完成规定的剩余修业年限，即为学费减免的年限；退役后考入我校的新生，规定的基本修业年限，即为学费减免的年限。","第九条　学费补偿或国家助学贷款代偿应遵循以下程序：","（一）应征报名的学生登录全国征兵网，按要求在线填写、打印《应征入伍服兵役高等学校学生国家教育资助申请表Ⅰ》（以下简称《申请表Ⅰ》，一式两份）并提交学校学生资助管理部门。在校期间获得国家助学贷款的学生，需同时提供《国家助学贷款借款合同》复印件和本人签字的偿还贷款计划书。","（二）学校财务部门、学生资助管理部门等对《申请表Ⅰ》中学生的资助资格、标准、金额等相关信息审核无误后，在《申请表Ⅰ》上加盖公章，一份留存，一份返还学生。","（三）学生在征兵报名时将《申请表Ⅰ》交至入伍所在地县级人民政府征兵办公室（以下简称县级征兵办）。学生被批准入伍后，县级征兵办对《申请表Ⅰ》加盖公章并返还学生。","（四）学生将《申请表Ⅰ》原件和《入伍通知书》复印件，寄送至学校学生资助管理部门。","（五）学校学生资助管理部门在收到学生寄送的《申请表Ⅰ》原件和《入伍通知书》复印件后，对各项内容进行复核，符合条件的，及时向学生进行学费补偿或国家助学贷款代偿。对于办理生源地信用助学贷款的学生，由学校根据学生签字的还款计划，将代偿资金一次性汇至学生指定的地址或账户。","第十条　退役后自愿回校复学或入学的学生和退役后考入我校的入学新生，到校报到后向学校一次性提出学费减免申请，填报《应征入伍服兵役高等学校学生国家教育资助申请表Ⅱ》并提交退役证书复印件。学校学生资助管理部门在收到申请材料后，及时对学生申请资格进行审核。符合条件的，及时办理学费减免手续，逐年减免学费。","第十一条　入伍资助资金不足以偿还国家助学贷款的，学生应与经办银行重新签订还款计划，偿还剩余部分国家助学贷款。","第十二条　应征入伍服兵役的往届毕业生，申请国家助学贷款代偿的，应由学生本人继续按原还款协议自行偿还贷款，学生本人凭贷款合同和已偿还的贷款本息银行凭证向学校申请代偿资金。","第十三条　因故意隐瞒病史或弄虚作假、违法犯罪等行为造成退兵的学生，以及因拒服兵役被部队除名的学生，学校将取消其受助资格并收回资助资金。因部队编制员额缩减、国家建设需要、因战因公负伤致残、因病不适宜在部队继续服役、家庭发生重大变故需要退役等原因，经组织批准提前退役的学生，仍具备受助资格。其他非正常退役学生的资助资格认定，由省级相关部门确定。","第十四条　本细则由学生处（党委学生工作部、心理健康教育中心）及研究生院（党委研究生工作部）负责解释。","第十五条　本细则自印发之日起施行，原《安徽大学服兵役学生国家教育资助实施细则》（校政〔2024〕18号）同时废止。","安徽大学三好学生、优秀学生干部和","先进班集体评选与表彰暂行办法","(校政(2009)25号)","第一条为展示学生奋发向上的精神风貌，树立先进典型，引的学生努力提高综合素质，发挥学生自我教育、自我管理和自我服务的作用，促进校风、学风建设，学校每学年开展一次三好学生、优秀学生干部和先进班集体评选活动。","第二条三好学生、优秀学生干部和先进班集体在入学满一学年的学生和班级中评选，三好学生和优秀学生干部评选比例分别占参评学生数的5%，先进班集体评选比例占参评班级数的10%，具体名额由学校分配。","第三条 学校在三好学生和优秀学生干部评选的基础上开展三好学生标兵和优秀学生干部标兵评选活动，三好学生标兵和优秀学生干部标兵的评选比例分别占三好学生和优秀学生干部的10%，具体名额由学校分配。","第四条 评选条件","(一)三好学生的评选条件","1、热爱祖国，遵守宪法和法律，具有坚定正确的政治方向，遵循党的基本路线，认真学习马克思列宁主义、毛泽东思想、邓小平理论和“三个代表”重要思想，积极践行科学发展观；","2、有优良的道德品质和文明行为，积极践行校训精神，模范遵守学生行为准则和学校有关规章制度，本学年学年考核获得优秀等次；","3、善于学习和吸收新知识，热爱所学专业，勤奋学习，成绩优异，获得本年度学习优秀奖；","4、积极参加集体活动、社会实践、学术科技及其它有益活动，自觉培养创新精神，有较强的运用知识分析解决问题的能力；","5、积极参加体育锻炼和文娱活动，有健康的身体、良好的卫生习惯和心理素质，达到《国家学生体质健康标准)","(二)优秀学生干部评选条件","工作，然成为同学服务，在同学中有致高的成信，木学考核获得优秀等次；","2、学习刻苦，成绩优良：","3.有较强的工作能力，积极组织开展各项活动，切实起到的干带头作用，取得明显工作成绩。","(三)先进班集体评选条件","1、有政治上进、团结幼作、以身作则、关心同学的班级干能集体； 2、积极践行校训精神，学风优良，积极开展社会实践和文化科技活动，效果显著；","3、有积极进取、乐于助人、遵纪守法、热爱集体、崇尚科学、反对迷信、朝气蓬勃、文明健康的良好班风；","4、全班同学坚持体育锻炼，达到《国家学生体质健康标准》身心健康；","5、班级管理制度健全，有良好集体生活习惯，保持宿舍和个人卫生，呈现出良好的精神面貌。","第五条 评选程序","三好学生、优秀学生干部和先进班集体的评选工作在学校学生评优工作领导小组的统一领导下进行，各院系的评选工作由院系学生评优工作领导小组负责。具体程序如下：","(一)申请。三好学生、优秀学生干部和先进班集体的评选均采取申请制，学生对照三好学生、优秀学生干部的评选条件，提出书面申请，如实介绍各方面表现情况；各班级在认真总结学请；年工作的基础上，对照先进班集体评选条件自行决定是否提出申","(二)提名。班级对提出申请的学生进行认真评议，在民主90投票的基础上，提出三好学生和优秀学生干部候选人；院系学生评优工作领导小组对各班级提出的候选人进行审核，对提出先进班集体申请的班级进行认真评议，确定三好学生和优秀学生干部人选，提出三好学生标兵、优秀学生干部标兵和先进班集体候选名单。","三好学生、优秀学生干部评选结果和三好学生标兵、优秀学生干部标兵、先进班集体提名情况应当在院系范围内张榜公示5个工作日，公示无异议后报学生处：","学生对三好学生、优秀学生干部评选结果和三好学生标兵、优秀学生干部标兵、先进班集体提名情况有异议的，可以向院系或者学生处反映，院系或者学生处应当予以妥善处理；","(三)评审。学校学生评优工作领导小组对各院系评选的三好学生和优秀学生干部进行审核，对各院系提出的候选三好学生标兵、优秀学生干部标兵和先进班集体进行评审，确定获奖名单。","第六条 表彰和奖励","(一)学校发文对三好学生及标兵、优秀学生干部及标兵和先进班集体予以表彰；","(二)学校向三好学生及标兵、优秀学生干部及标兵颁发证书和奖品，向先进班集体颁发奖状和奖金；","(三)学校将学生获奖情况载入学生本人档案；","(四)学校在三好学生标兵、优秀学生干部标兵和先进班集体中推荐省和国家级三好学生、优秀学生干部和先进班集体。","第七条本办法适用于我校普通教育本科学生。","第八条 本办法自2009年9月1日起施行，由学生处负责解释，原《安徽大学学生先进个人、先进班集体评选和表彰暂行办法》(校政(2007)55号)即行废止。","安微大学优秀本科毕业生评选和表能办法(校政(2021)27号)","第一条为深入贯相习近平部时代中国特色社会主义思想，而费和全国教育大会和《深化新时代教育评价改革总体方笑)精的落实立德村人根本任务，引导和激励大学生成长为德智体美明面发展的社会主义建设者和接班人，引导大学生树立正确的成长观、职业观，择业观，充分发挥优秀毕业生的示范引领作用，根据很省普通高等学校优秀毕业生评选认定办法》(皖教学(2021)1号)精神，结合学校实际，制定本办法。","第二条 优秀本科毕业生的评选比例不超过当年度本科毕业生人数的15%。","第三条 优秀本科毕业生的评选条件","(一)具有坚定正确的政治方向，拥护中国共产党领导，热爱社会主义祖国，深入学习贯彻习近平新时代中国特色社会主义思想，坚定中国特色社会主义道路自信、理论自信、制度自信、文化自信，树立中国特色社会主义共同理想，理想信念坚定。遵纪守法、品德高尚，诚信意识较强，学术道德良好，在校期间未受过处分；","(二)在校期间获得过下列荣誉称号、表彰或者奖励之一：","1、三好学生；","2、优秀学生干部；","3、优秀团员；","4、优秀团干：","5、优秀共产党员；","6、受到省级以上(含省级)表彰或者奖励；","(三)在校期间品行表现良好，每学年学年考核均为“优秀”等次；","(四)热爱所学专业，学习刻苦认真，平均学分绩点在2.792ANHUI UNTM 评奖评优以上(含2.7)，在校期间曾获得学习优秀类奖学金。","(五)积极参加体育和文娱活动，有良好的生活习惯，身心健康，热心公益，有社会责任感：","(六)在就业过程中无违约行为：","(七)优先条件：在满足上述条件的基础上，毕业生积极响应国家号召参军入伍，参加基层就业项目，自愿到基层、边远地区我困地区和艰苦行业就业的或具有创业意识，开展创业实践活动并成功创业的，可优先参加评选。","第四条 评选程序","优秀本科毕业生评选工作在学校毕业生就业工作指导委员会的统一领导下进行，学生处(学生发展中心)负责评选的组织、协调和材料审核工作，各学院的优秀本科毕业生评选工作由学院毕业生就业工作领导小组负责。具体程序如下：","(一)本人申请。毕业生对照评选条件，提出书面申请，全面总结在校期间的各方面表现情况。","(二)班级评议。班级在辅导员的指导下，在本人申请的基础上，对提出申请的毕业生进行评议，根据评议结果提出优秀毕业生候选人，并在班级范围内公示。","(三)学院推荐。学院毕业生就业工作领导小组对各班级提出的候选人进行审核，并提出推荐意见，形成推荐结果。推荐结果须在学院范围内公示3个工作日，公示无异议后，将推荐结果及相关材料报学生处(学生发展中心)。","学生对推荐结果有异议的，可以向学院或者学生处(学生发展中心)反映，学院或者学生处(学生发展中心)应当予以妥善处理。","(四)学校评审。学生处(学生发展中心)对各学院推荐情况进行审核，汇总后提交学校毕业生就业工作指导委员会评审，确定优秀本科毕业生人选，并在全校范围内公示5个工作日。","第五条 表彰与奖励","(一)学校发文对优秀本科毕业生予以表彰；","(二)学校向获奖学生颁发荣誉证书，获奖情况载入学生在人档案；","(三)学校给予获奖学生1000元/人的奖励；","(四)学校在优秀本科毕业生中推荐“安徽省普通高等学校优秀毕业生”候选人。","第六条对优秀毕业生评选工作结束后至毕业生离校前出现的不能按期毕业，或有违规违纪违法行为受到处理、处分的毕业生，学校按规定撤销其优秀毕业生称号。","第七条 本办法适用于普通教育本科学生。","第八条 本办法自颁布之日起施行，由学生处(学生发展中心)负责解释，原《安徽大学品学兼优毕业生评选和表彰办法》(校政(2009)25号)即行废止。","安徽大学本专科学生活动管理办法(经))(校政(2017)15号)","第一章 总则","第一条为部助家庭经济积乘学生断相完故警出。金面破长.是一莎规6学校本专科学生成的工作。根据。《国务成关他圣情通本科高校、高等职业学校和中等职业学校家定经所的难学生资助体系的意见》 《安徽省人民政府关于建立健全普通利高校、高等职业学校和中等职业学校家庭经济困难学生资助体《安徽省教育厅安徽系的实施意见》《普通高校学生管理规定》","省财政厅关于印发学生资助规范管理年活动实施方案的通知》《安微大学章程》等精神，结合我校学生资助工作实际，特制定本办法。","第二条 学校学生资助工作坚持公开、公平、公正和多元混合资助的原则，积极构建奖、贷、助、勤、补、免、偿等全方位立体化的资助体系。","第三条 本办法的实施范围为在我校接受普通高等学历教育的本、专科学生。","第二章组织机构","第四条 学校成立以校长任组长，以常务副校长任副组长的学生资助工作领导小组，领导学校资助工作；设立学生资助管理中心，归口学生处管理，负责做好学生资助工作。","第五条 各院(系)成立以分管学生工作负责人任组长的学生资助工作领导组，并指定专人从事本院(系)的具体资助工作。","第三章 资助管理","第六条 学校学生资助工作领导小组负责全面贯彻国家及安徽省学生资助政策；研究决定学校学生资助工作的重大事项，审核、批准重要资助项目；协调学校有关职能部门及各院(系)","资助办法","生的各项资助工作。","学生资助管理中心在学校学生资助工作领导小组的领","第七条","9下，负责贯彻落实国家及安徽省学生资助政策，建立并完善学的学生资助政策体系，做好与上级主管部门、经办金融机为和校内各部门的沟通协调工作：做好学生资助档案的管理工作：组拟院(系)做好家庭经济困难学生的认定及家庭经济困难学生动泰信息库的维护工作：做好生源地信用助学贷款的政策宣传、组级申请、校内审核和贷后管理工作；做好各类奖助学金和临时困难补助的评定与发放，以及“绿色通道”的开设与管理工作：做好勤工助学劳务审核与发放工作：组织开展资助政策宣传和资助育人工作；组织开展资助工作业务培训和院(系)学生资助工作监督评价等。","第八条 院(系)要依照学校各项资助政策和工作要求，做好本院(系)家庭经济困难学生的认定工作；做好各类资助项目的宣传、评选、推荐等工作；做好家庭经济困难学生的日常教育和管理工作；做好资助工作的材料收集、整理与建档等管理工作：做好资助效果的跟踪调查和各班级学生资助工作的指导、管理与考核工作。","第九条 财务处负责学校各类资助资金的管理、审核和发放，生源地助学贷款到位资金的确认、各类助学贷款风险补偿金学校负担部分的划拨以及配合学校和其他部门做好学生资助相关工作。","第四章 资金来源","第十条 学校资助资金的来源主要包括：","(一)国家及省拨专项资助资金；","(二)学校按照国家规定，从事业收入中提取4%-6%的专项资助经费；","(=)社会团体、企业及个人捐助。","第五章 资助项目","第十一条学校执行国家政策并结合自身实际情况，改章以资助项目：(一)生源地信用助学贷款；","(二)国家奖助学金：包括国家奖学金、国家励志奖学金，国家助学金；","(三)学校奖学金：包括本科学生奖学金、品学兼优毕业生奖学金、国际商学院奖学金、文典奖学金；","(四)校外奖助学金：包括社会组织和个人在我校设立的各类奖助学金；","(五)勤工助学；","(六)减免学费；","(七)临时困难补助；","(八)服义务兵役学费补偿贷款代偿；","(九)基层就业学费补偿贷款代偿；","(十)直招士官学费补偿贷款代偿；","(十一)绿色通道：无力缴纳学费的家庭经济困难新生，可通过“绿色通道”先入学后资助；","(十二)学校设立的其它资助项目。","第六章 执行与监督","第十二条 学校建立责任追究制度，校长是第一责任人，院系资助工作负责人和辅导员是主要责任人。各项资助结果接受学校纪检、审计及财务等部门监管。","第十三条 各类奖助学金实行班级、院(系)、学生资助管理中心、学校四级评审及班级、院(系)、学校三级公示制度。师生对评选结果有异议的，可向院(系)资助工作领导组提出质疑，院(系)资助工作领导组应在5个工作日内予以答复。仍有异议，可向学生资助管理中心提请复议，学生资助管理中心应在5个工98ANHUI UNVERSIMY 资助办法作日内予以答复。","第十四条 学校各项资助项目严格依据相关评选办法或实施细则执行，各类资助资金由财务处统一划入学生银行卡，学生资助管理中心将资助情况载入学生档案。","第十五条 本办法由学生处(党委学工部)负责解释。第十六条 本办法自印发之日起施行。原《安徽大学本专科学生资助管理暂行办法》（校政（2012）5号）同时废止。","发微大学家庭经济困难学生认定工作实通为(校政(2019)66号)","第一章 总则","第一条为进一步健全学生资动制度，提高学生负动情确g提据安徽省教育厅等六部门关于印发《安徽省享庭经济的。生认定工作实施办法>的通知》 (皖教(2019)2号)文件精神，结合我校实际，制定本办法。","第二条 本办法所称家庭经济困难学生认定工作的对象是指人人及其家庭的经济能力难以满足在校期间的学习、生活基本支出的学生。","第三条 本办法所称的学生包括我校全日制本专科学生和纳入全国研究生招生计划的全日制研究生。","第四条 家庭经济困难学生认定工作基本原则","(一)坚持实事求是、客观公平。认定家庭经济困难学生要从客观实际出发，以学生家庭经济状况为主要认定依据，认定标准和尺度要统一，确保公平公正。","(二)坚持定量评价与定性评价相结合。既要建立科学的量化指标体系，进行定量评价，也要通过定性分析修正量化结果，更加准确、全面地了解学生的实际情况。","(三)坚持公开透明与保护隐私相结合。既要做到认定内容、程序、方法等透明，确保认定公正，也要尊重和保护学生隐私，严禁让学生当众诉苦、互相比困。","(四)坚持积极引导与自愿申请相结合。既要引导学生如实反映家庭经济困难情况，主动利用国家资助完成学业，也要充分尊重学生个人意愿，遵循自愿申请的原则。","第二章 组织管理","第五条 学校学生资助工作领导小组领导、监督家庭经济困难100经济困难学生认定工作。","朋六条院(系)成立以分管学生工作负责人为组长，辅导员(别8代表等相关人员参加的认定工作组，负责认定的具体组数和审核工作。","第七条 院(系)成立年级、(班级)认定评议小组，成员包括辅导员(班主任)、学生代表等，开展民主评议工作。认定评说小组成员中的学生代表应具有广泛性，人数不少于年级(班级》点人数的10%。认定评议小组成员名单应在本年级(班级)公示。","第三章认定依据和等级划分","第八条 家庭经济困难学生认定依据","(一)家庭经济因素。主要包括家庭收入、财产、债务等情况。","(二)特殊群体因素。主要指是否属于建档立卡贫困户家庭学生、最低生活保障家庭学生、特困供养学生、孤残学生、烈士子女、家庭经济困难残疾学生及残疾人子女等情况。","(三)地区经济社会发展水平因素。主要指校园地、生源地经济发展水平、城乡居民最低生活保障标准，学校收费标准等情况。","(四)突发状况因素。主要指遭受重大自然灾害、重大突发意外事件等情况。","(五)学生消费因素。主要指学生消费的金额、结构等是否合理。(六)其他影响家庭经济状况的有关因素。主要包括家庭负担、劳动力及职业状况等。","第九条 家庭经济困难认定等级为一般困难、困难和特别困难。","第十条 家庭经济困难等级认定标准","(一)家庭经济特别困难学生的认定标准","无经济来源的孤儿、烈士子女、建档立卡贫困户家庭学生、实列为特困户、特困供养或者重点优抚对象的学生可直接认定为特别困难。除此之外，需重点关注以下类别，","1.建档立卡(已脱贫)家庭学生；","2.最低生活保障家庭学生：","3.带果或义母一方完全丧夫劳动能力，失去主要经济知g学生；4.残疾学生或残疾人子女且家庭经济特别困难的：","5学生本人或父母身想重大疾病，医疗费开支数额巨大，道成家庭负债严重的学生；","6家庭遭遇自然灾害或者突发事件致使财产严重损失的学生。","7.其它原因造成家庭经济特别困难的学生。","(二)家庭经济困难和一般困难学生的认定标准由院(系)确定。","第四章认定程序及日常管理","第十一条 学校每学年开展一次全校家庭经济困难学生认定工作，认定工作程序主要包括提前告知、学生申请、年级(班级)评议、院(系)认定及公示、学校审核、建档备案等环节，具体如下：","(一)提前告知。学校通过随录取通知书寄送资助政策简介、校园网信息发布、主题班会等多种途径和方式，提前向学生或监护人告知家庭经济困难学生认定工作事项。","(二)学生申请。学生如实填写《安徽省家庭经济困难学生认定申请表》，同时通过安徽大学学生资助管理系统如实填写《安徽大学学生就学经济压力测评表》，提交家庭经济困难学生认定申请。","(三)年级(班级)评议。各年级(班级)认定评议小组对照认定标准，根据学生提交的申请材料，综合考虑学生日常消费情况以及影响家庭经济状况的有关因素，组织开展线上线下信息比对及民主评议，初步确定本年级(班级)家庭经济困难学生的名单及等级。","(四)院(系)认定及公示，既(系)认定工作组要认真事","(五)学校审核，学生资助管理中心对院(系)的认定结果进行汇总事核，最终确定全校家庭经济困难学生的名单及等级。","(六)建档备案。学生资助管理中心将家庭经济困难学生名能连同学生的申请材料统一建档，并按要求录入全国学生资助管理信息系统。","第十二条 家庭经济困难学生认定结果是学生获得资助的重要依据，学校每学期通过信息比对、家访、个别访谈、大数据分析、信函索证等方式对认定结果进行复核和动态调整，接受广大师生监督，对认定结果的异议给予及时回应。","第五章 相关责任","第十三条学校要高度重视家庭经济困难学生认定工作，坚持认定标准，严格认定程序，要加强家庭经济困难学生的资助政策宣传，不断提高资助政策及执行情况的透明度，做到资助项目公开、申请条件公开、评审过程公开、资助结果公开。","第十四条 相关单位在开展家庭经济困难学生认定工作中，要注意保护受助学生尊严。公示时，严禁涉及学生个人敏感信息及隐私，不得将学生身份证件号码、家庭住址、电话号码、出生日期等个人敏感信息进行公示。","第十五条 相关单位要加强学生诚信教育，要求学生如实提供家庭经济信息，及时告知家庭经济变化情况。对于恶意提供虚假信息的情况，一经查实，取消学生的认定资格和己获得的相关资助，追回资助资金，视情况依据学校有关规定进行严肃处理。","第十六条 相关单位要强化责任意识，明确认定工作责任人，通过多种方式关心、关注家庭经济困难学生的学习、生活，及时把握学生的家庭经济变化情况，确保精准资助工作扎实开展。","第六章 附则","第十七条 本办法由学生发展中心负责解释。","第十八条 本办法自印发之日起施行。原《安徽大学家庭经济困难学生认定工作实施细则》(校政(2017)15号)同时废止。","安徽大学本专科生国家助学金管理实施细则(修订)","(校政(2021)55号)","第一条为进一步规范我校本专科生国家助学金管理工作，根据《普通本科高校，高等眼业学校国家助学金管理暂行办法》和要徽省本专科生国家助学金实施细则》(皖财教(2019)914号)，结合工作实际，制定本细则。","第二条 国家助学金的资助对象为在我校接受普通高等学历教育的本、专科学生中家庭经济困难的学生。","第三条 资助标准为一等每生每年4000元，二等每生每年3000元，三等每生每年2000元。","第四条 申请条件","(一)具有中华人民共和国国籍；","(二)热爱社会主义祖国，拥护中国共产党的领导；","(三)自觉遵守宪法和法律，遵守学校各项规章制度：","(四)诚实守信，品德优良；","(五)家庭经济困难，生活俭朴；","(六)勤奋学习，积极上进。","第五条 评审程序","(一)本人申请。学生本人对照国家助学金评选条件，提出申请，如实介绍各方面表现情况。","(二)班级评议。申请人所在班级在辅导员的指导下，对提出申请的学生进行评议，根据评议结果推荐国家助学金候选人。","(三)学院评选、推荐。学院资助工作领导组按照规定的比例和条件，对推荐人选进行评选、推荐。评选和推荐结果须在学院内公示5个工作日，无异议后，报学校审核。","(四)学校评审。学生处对各学院推荐人选汇总审核，提出当年享受国家助学金资助初步名单及资助档次，报学校资助工作105领导小组研究通过后，在全校公示5个工作日。公示无异议后，报上级主管部门审查备案。","(五)经上级主管部门审批同意，学校向受助学生发放助学金。","第六条 监督管理","(一)同一学年内，获得国家助学金的家庭经济困难学生可以同时申请并获得国家奖学金或国家励志奖学金；","(二)学生获得国家助学金后，如发现有违法违纪或在评审中弄虚作假行为的，一经核实，按有关规定给予纪律处分。","第七条 本细则由党委学生工作部、学生处(学生发展中心)负责解释。","第八条本细则自印发之日起施行。原《安徽大学国家助学金实施细则(修订)》(校政(2017)15号)同时废止。","安徽大学本专科学生减免学费实施细则(修订)(校政(2017)15号)","第一条为帮助家庭经济特别困难的学生顺利完成学业，根据《安徽大学本专科学生资助管理办法(修订)》，结合工作实际。特制订本细则。","第二条 本细则适用于我校家庭经济特别困难以及其它符合国家减免学费政策的在我校接受普通高等学历教育的本、专科学生。","第三条 减免学费可分为全部减免及部分减免。","第四条 减免范围","(一)革命烈士遗孤；","(二)孤儿或父母均丧失劳动能力且家庭经济特别困难的学生；","(三)应征入伍退役复学的学生；","(四)其它符合国家学费减免条件的学生。","第五条 学费减免的办理时间为每年11月。","第六条 减免程序","(一)学生本人提出申请，填写《安徽大学学生减免学费申请表》并提供相关证明材料；","(二)辅导员对其家庭经济、日常表现和学习态度等情况进行综合评价；","(三)院(系)初审同意并签署意见后，将学生材料报学生处；","(四)学生处审核并汇总申请材料，同时根据学生困难程度提出减免方案，经校学校学生资助工作领导小组同意后，报校财务处办理减免学费。","第七条 本细则由学生处(党委学工部)负责解释。","第八条 本细则自印发之日起施行。原《安徽大学本专科学生减色兰费实施细则》（校政（2012）5号）同时废止。","安徽大学本专科学生临时困难补助实施细测(修订)","(校政(2017)15号)","第一条 为帮助因遭遇突发情况而造成临时经济困难的学生度过难关，根据《安徽大学本专科学生资助管理办法(修订)》，结合工作实际，特制定本细则。","第二条 本细则适用于在我校接受普通高等学历教育的在核本、专科学生。","第三条申请范围：学生因供养人发生重大疾病或突然亡故、家庭经济遭受重大损失、本人遭遇重大意外伤害事故或因突发急重病症住院等原因，影响基本生活，致使暂时无力支付日常生活费的，可申请临时困难补助。","第四条 补助金额","(一)符合上述情况的学生，学校酌情给予500至2000元的临时困难补助；","(二)对其它特殊原因申请临时困难补助的，由学校另行研究处理。","第五条 申请和发放程序","(一)本人提出申请并填写《安徽大学学生临时困难补助申请表》(一式二份)，经辅导员核实，由院(系)签字盖章后送学生处审核；","(二)学生处审批盖章后，学生可将《安徽大学学生临时困难补助申请表》送交财务处办理。","第六条 本细则由学生处(党委学工部)负责解释。","第七条 本细则自印发之日起施行。原《安徽大学本专科学生临时困难补助实施细则》(校政(2012)5号)同时废止。","安徽大学勤工助学管理办法","(校政(2019)65号)","第一章 总则","第一条 为进一步加强学校学生勤工助学管理，促进勤工助学活动健康、有序开展，保障学生合法权益，帮助学生顺利完成学业，发挥勤工助学育人功能，培养学生自立自强、创新创业精神，根据教育部、财政部《高等学校勤工助学管理办法(2018年修订))(教财(2018)12号)精神，结合学校工作实际，制定本办法。","第二条本办法所称学生是指学校招收的全日制本专科学生和研究生。","第三条 勤工助学活动是指学生在学校组织下利用课余时间，通过劳动取得合法报酬，用于改善学习和生活条件的实践活动。","第四条 勤工助学是学校学生资助工作的重要组成部分，是提高学生综合素质和资助家庭经济困难学生的有效途径，是实现全程育人、全方位育人的有效平台。勤工助学活动应坚持“立足校园、服务社会”的宗旨，按照“学有余力、自愿申请、信息公开、扶困优先、竞争上岗、遵纪守法”的原则，在不影响正常教学秩序和学生正常学习的前提下有组织地开展。","第五条 勤工助学活动由学校统一组织和管理。学生私自在校外兼职的行为，不在本办法规定之列。","第二章 组织机构","第六条学校学生资助工作领导小组全面领导勤工助学工作，负责协调学校的宣传、学工、研工、财务、人事、教务、科研、后勤、团委等部门配合学生发展中心开展相关工作。","第七条 学生发展中心贯彻落实学校学生资助工作领导小组的决策部署，成立学生勤工助学服务中心，与学生资助管理中心“一个机构、两块牌子”，具体负责勤工助学的日常管理工作。","第八条 院(系)学生资助工作组负责本院(系)","工作，负责组织协调并做好相关管理工作。","第三章 学校职责","第九条 组织开展勤工助学工作是学校学生工作的重要内容。学校认真组织，积极宣传，校内有关职能部门要充分发挥作用，在工作安排、人员配备、资金落实、办公场地、活动场所及动学岗位设置等方面给予大力支持，为学生勤工助学活动提供指导服务和保障。","第十条 加强对勤工助学学生的思想教育，培养学生热爱劳动、自强不息、创新创业的奋斗精神，增强学生综合素质，充分发挥勤工助学育人功能。","第十一条 对在勤工助学活动中表现突出的学生予以表彰和奖励：对违反勤工助学相关规定的学生，可按照规定停止其勤工助学活动。对在勤工助学活动中违反校纪校规的，按照有关规定进行教育和处理。","第十二条 根据国家有关规定，筹措经费，设立勤工助学专项资金，并制定资金使用与管理办法。","第四章学生勤工助学服务中心职责","第十三条确定校内勤工助学岗位。与人事处等部门受理、审核校内用人单位岗位申报，引导和组织学生积极参加勤工助学活动。","第十四条 配合财务处共同管理和使用学校勤工助学专项资金。按照有关规定，制定校内勤工助学岗位的报酬标准，并及时规范发放。","第十五条 配合研究生院做好研究生的勤工助学工作；与学工部门妥善处理勤工助学过程中发生的争议。","第十六条 组织用人单位对勤工助学学生开展必要的岗前培训知安全教育，维护学生的合法权益。","金十七条指导和监督学生的勤工助学活动，不定期对用人单及学生进行督查，在年度聘用的基础上，实行月度考核、学期动态调整。","第十八条 开发校外勤工助学资源。积极收集校外勤工助学信息.开拓校外勤工助学渠道，并纳入学校管理。","第十九条 不得组织学生参加有毒、有害和危险的生产作业以及超过学生身体承受能力、有碍学生身心健康的劳动。","第五章 校内勤工助学岗位设置与管理","第二十条 设岗原则：","(一)学校积极统筹并开发校内资源，保证学生参与勤工助学的需要。校内勤工助学岗位设置以校内教学助理、科研助理、行政管理助理和学校公共服务等为主。原则上按照每个家庭经济困难学生月平均上岗工时不低于20小时为标准，测算出学期内全校每月需要的勤工助学总工时数(20工时×家庭经济困难学生总数)，统筹安排、设置校内勤工助学岗位。","(二)勤工助学岗位既要满足学生需求，又要保证学生不因参加勤工助学而影响学习。学生参加勤工助学的时间原则上每周不超过8小时，每月不超过40小时。寒暑假勤工助学时间可根据学校的具体情况适当延长。","第二十一条 岗位类型：","勤工助学岗位分固定岗位和临时岗位。","(一)固定岗位是指持续一个学期及以上的长期性岗位和寒暑假期间的连续性岗位；","(二)临时岗位是指不具有长期性，通过一次或几次勤工助学活动即完成任务的工作岗位。","第二十二条 岗位申报：","(一)固定岗位：用人单位根据工作需要按学年向学生勤工助学服务中心提交书面需求申请。","(二)临时岗位，用人单位根据工作需要提交书面需来中流。 三经分管校领导审批后提交勤工助学服务中心办理。","第二十三条 岗位招聘： 理用协议。","用入单位发布招聘信息并组织招聘。安排勤工助学岗位，两优先考虑家庭经济困难的学生。对少数民族学生从事勤工助字路动，应尊重其风俗习惯。","第二十四条 岗位管理：","各用入单位需安排专人负责勤工助学的管理，对在岗学生进 与校内经行统一培训、管理和考核，规范有序开展勤工助学各项工作。 州原则上格按照学生实际工作时长计算酬劳，并按规定时间上报学生勤工 工助学助学服务中心审核备案。","第六章校外勤工助学活动管理","第二十五条 校外勤工助学活动由学生勤工助学服务中心统筹管理，注重与学生学业的有机结合。","第二十六条 校外用人单位聘用学生勤工助学，须向学生勤工助学服务中心提出申请，提供法人资格证书副本、税收证明等相关证明文件复印件。经审核同意，学生勤工助学服务中心组织推荐适合工作要求的学生参加勤工助学活动。","第二十七条 校外用人单位聘用学生勤工助学，须为学生购买意外伤害保险。","第七章勤工助学酬金标准及支付","第二十八条 校内固定岗位按月计酬。以每月40个工时的酬金原则上不低于合肥市政府或有关部门制定的最低工资标准或居民最低生活保障标准为计酬基准，可适当上下浮动。","第二十九条 校内临时岗位按小时计酬，每小时酬金参照合肥市政府或有关部门规定的最低小时工资标准合理确定，原则上不低于每小时12元人民币。","第三十条 校外勤工助学酬金标准不应低于合肥市政府或有关解门规定的最低工资标准，由用人单位、学校与学生协商确定，并写入聘用协议。","第三十一条 学生参与校直机关各部门及有关直属附属单位的静工助学活动，其劳动报酬由学生勤工助学服务中心或研究生院从勤工助学专项经费中支付；学生参与教学单位的勤工助学活动，其劳动报酬从学校划拨至各教学单位的专项经费中支付：学生参与校内经营性单位或有专门经费项目的勤工助学活动，其劳动报醉原则上由用人单位支付或从项目经费中开支；学生参与校外勤工助学，其劳动报酬由校外用人单位按协议支付。","第三十二条 学校组织的校内勤工助学活动劳酬一律按月足额打入学生银行卡。","第八章法律责任","第三十三条 在校内开展勤工助学活动的，学生及用人单位须遵守国家及学校勤工助学相关管理规定。学生在校外开展勤工助学活动的，学生勤工助学服务中心代表学校与用人单位和学生签订具有法律效力的三方协议书。签订协议书并办理相关聘用手续后，学生方可开展勤工助学活动。","第三十四条 用人单位必须组织勤工助学学生开展必要的业务培训和安全教育。不得组织勤工助学学生参加缺乏安全保护措施、有毒、有害和危险的生产作业以及超过学生身体承受能力、有碍学生健康的劳动。","第三十五条 学生参加勤工助学活动应遵守国家法律法规及学校的规章制度，履行勤工助学活动协议规定，服从用人单位管理，严格操作流程，增强安全防范意识。","第三十六条 在勤工助学活动中，若出现协议纠纷或发生学生意外伤害事故，协议各方应按照签订的协议协商解决。如不能达成一致意见，则按照有关法律法规规定的程序办理。","第九章附则","第三十七条 本办法由学生发展中心负责解释。","第三十八条 本办法自公布之日起施行。原《安徽大学勤工助学管理办法(2006年9月1日修订)》《安徽大学学生兼职管理工作暂行办法(校政(2006)56号)》同时废止。","安徽大学推荐优秀应届本科毕业生免试攻读研究生工作实施办法","","说明：","1.竞赛获奖和创新项目计分原则上最多不超过5人（对于有最少参赛人数要求的竞赛获奖，以实际参赛人数加分），第一完成人计满分，第2-3位成员按60%计分，其他成员按30%计分。","2.在国际组织实地实习三个月及以上加2分，远程实习加0.5分。","3.竞赛获奖按文中的“互联网+”、“挑战杯”、“创青春”等为竞赛简称。","4.竞赛认定汇总表提前在教务处网站公布。","安徽大学团员教育评议，团籍注册和团内评优实施办法开展团员教育评议、团籍注册和团内评优工作是加强团的自身建设的重要内容。此项工作的进一步制度化、规范化是加强团员思想政治教育和自我教育，强化团员意识，提升基层团组织凝聚力和战斗力的制度保障。根据上级团组织的有关规定，特制定本实施办法。","一、团员教育评议和团籍注册","第一条 团员教育评议工作主要是对照团章规定的团员的各项义务，对高校团员必须遵守的各项规章制度及模范带头作用和团员的品行状况进行自查互评，在此基础上进行团籍注册。","第二条 团员教育评议的具体内容：","1、高举中国特色社会主义伟大旗帜，以马克思列宁主义、毛泽东思想、邓小平理论、“三个代表”重要思想、科学发展观、习近平新时代中国特色社会主义思想为指导，牢固树立政治意识、大局意识、核心意识、看齐意识，坚决维护习近平总书记党中央的核心、全党的核心地位，坚决维护党中央权威和集中统一领导，始终在思想上政治上行动上同以习近平同志为核心的党中央保持高度一致。","2、积极响应上级党团组织的号召，投身到文明校园建设的各项活动中去，以实际行动参与校风、学风的建设，为学校的改革、发展和稳定作出贡献。","3、履行共青团员的各项义务，遵守团的纪律和学校的各项规章制度，在学习、生活、工作中起先锋模范作用。","4、自觉参加团支部的各项活动，积极支持团支部加强自身建设，按时缴纳团费。","第三条 教育评议活动的方法步骤：","1、学习教育","习教育要以解决“机关化、行政化、贵族化、娱乐化”及事化“或治性、先进性、群众性”为中心内容，强化团员的政治意识、美局意识，核心意识和看齐意识，学习的主要内容由各基层团委、用总支、直属团支部根据当前的形势和上级团组织的要求安排。同时，在学习教育的基础上，围绕学校的中心工作，开展富有思想性、教育性的实践活动。","2、个人小结","每名团员均需对自己一年来的思想、工作、学习、参加团内活动和履行团员义务等方面公正客观、实事求是地进行书面总结，找出自身不足，明确今后前进的方向。","3、民主评议","民主评议分两个阶段进行：","(1)以团小组为单位进行评议。由团员公开汇报一年来的思想、工作、学习等情况，小组其他成员根据被评议团员的总结内容及其一贯表现进行民主评议。各团小组根据评议情况，提出本小组优秀团员、合格团员、经帮助能够合格团员、不合格团员名单，报团支部。","(2)团支部在团小组互评的基础上，召开支部委员大会，对团员作出综合评议。评议结果由团支部报所在基层团委、团总支审核，最后由基层团委、团总支报校团委审批，直属团支部直接报校团委审批。有关团员评议等次的条件说明，基本合格和不合格团员的帮助、处理办法严格按照《细则》中关于“团员教育评议制度”、“团员年度团籍注册制度”等有关规定执行。","4、表彰先进与组织处理","(1)表彰先进","教育评议结束后，校团委将对评议的先进个人予以表彰。对于表现突出并积极要求入党的优秀团员，团支部要及时向所在基层团委、团总支推荐，由所在团委、团总支核准后向所在单位党组织推荐作为党的发展对象。","(2)年度团籍注册","对评议合格以上的团员及时在团员证上进行团籍注册，对暂缓注册的团员除批评教育外，按照团章有关要求，给予相应的团纪处分。对于极少数不合格团员，不得进行注册。经教育帮助仍不改进的，应予以除名；犯有严重错误的，根据有关规定给予团纪处分直至开除团籍。团籍注册以团支部为单位开展，各团委、团总支复核审定，评议结果以书面形式报送校团委。","第四条 团员教育评议和团籍注册工作时间安排在每年四月份。具体时间段由各团委、团总支、直属团支部根据本单位实际情况确定。","第五条 为进一步保证团员教育评议和团籍注册工作的实效，各团委、团总支、直属团支部在实施过程中应安排团员、团干进行《团章》和党的基本理论、路线、方针、政策的学习，并结合团的组织生活、团日活动，采取座谈会、参观考察、志愿服务等多种形式对团员团干进行教育，使此项工作作为加强共青团基层组织建设的重要内容长期坚持下去。","二、团内评优工作","第六条 团内评优工作是学校共青团表彰先进，树立青年榜样，推动共青团工作整体提高的重要举措。通过团内评优，发扬共青团组织的先进性和团员团干的先锋模范作用，引导广大团员努力做到志存高远、德才并重、情理兼修、勇于开拓，充分发挥共青团在学校建设中的生力军作用。","第七条 评选对象：团内评优工作在二年级以上(包括二年级)的支部和有正式学籍的二、三、四年级大学生团员、二、三年级研究生团员及教职工团员中进行，凡入学(入职)未满一年的团员，不列入评选范围。申报对象必须在当年度共青团基础信息统计数据中，未纳入信息系统或数据不符合要求的申报对象不具备申报评选资格。 第八条 评选条件","1、优秀共青团员","(1)理想信念坚定，拥护党的领导，热爱祖国、热爱人民、热爱社会主义。","(2)积极践行社会主义核心价值观，遵纪守法，品格高尚。","(3)学习、工作本领过硬，善于创新创造，继承和发扬艰苦奋斗精神，取得突出业绩，能够发挥模范带头作用。","(4)自觉遵守团的章程，模范履行团员的各项义务，积极参加团的活动。","(5)有较强的社会责任感，经常性参加志愿服务，积极参与构建清朗网络空间。","(6)团龄在1年以上。","(7)校团委机关和各基层团委、团总支专职干部不参加评选。","2、优秀共青团干部","(1)理想信念坚定，坚持正确的政治方向，高举中国特色社会主义伟大旗帜，以马克思列宁主义、毛泽东思想、邓小平理论、“三个代表”重要思想、科学发展观、习近平新时代中国特色社会主义思想为指导，认真贯彻落实中央、省、学校关于共青团工作的各项部署。","(2)积极践行社会主义核心价值观，遵纪守法，品格高尚。","(3)忠诚党的事业，严守党的纪律，注重党性修养，敢于担当，清正廉洁，模范践行“三严三实”要求，严格落实中央八项规定精神，坚决反对“四风”。","(4)热爱团的岗位，自省自励，作风扎实，认真执行团的上级机关作出的指示和决议，坚持围绕党政中心工作和青年需求开展工作。具有较强的工作能力，在团的岗位上取得突出业绩。","(5)心系广大青年，注重深入基层，密切联系青年，竭诚服务青年，在青年中具有广泛的影响力、号召力。","(6)经常性参加志愿服务，积极参与构建清明网络空间，有较强的社会责任感。","(7)从事团的工作一般不少于1年。","m “优秀共青团干部”评选重点面向基层，校团委机关负责人FEI 不参加评选。","3、先进团支部","(1)坚持政治性、先进性、群众性，工作活跃，有1项以上特色活动，有效吸引团员青年积极参与，大力开展基层服务型团组织建设，在联系和服务青年方面做出了突出成绩，得到所在单位和青年的高度认可。","(2)“三会两制一课一册”制度健全，措施得力；团的思想政治教育工作有实效，《团员证》年度注册按规定进行；保质保量完成年度共青团基础信息统计工作并按时录入系统；按规定收缴团费，认真做好团员教育评议和团员管理工作。","(3)组织设置规范，工作制度健全。按期换届，认真履行民主选举程序。经常开展团员教育、团员管理、团员发展工作。贯彻落实中央、省委、学校党的群团工作会议精神和《安徽大学共青团改革实施方案》，积极开展基层团建创新探索。","(4)积极主动完成上级团组织交办的各项任务；配合所在班级班委会开展工作；自身工作有特色，支部所有团员无受纪律处分和违反团纪情况。","(5)在学校校风、学风建设和各项团学活动中，能积极发挥团员、团干模范带头作用。","4、红旗团委(团总支)","(1)工作活跃，成绩显著。坚持政治性、先进性、群众性，扎实开展团的工作和活动，工作具有鲜明特色，团员参与踊跃，在青年中有影响。着眼打造联系和服务青年的坚强堡垒，大力加强服务型团组织建设，增强服务意识、强化服务职能，青年在遇到困难时想得起、找得着、靠得住。在落实上级团组织重点工作上取得实效。","(2)组织设置规范，工作制度健全。按期换届，认真履行民主选举程序，团的委员会能够发挥积极作用。经常开展团员教有。团负管理、团员发展工作。贯彻落实中央、省委、学校党的群团工作会议精神和《安徽大学共青团改革实施方案》，积极开展基层团建创新探索。切实履行职责，带动所属团组织建设，所属团组织工作有活力。","(3)团委(团总支)班子政治强、业务精，认真贯彻民主集中制，团结进取，作风扎实，富有开拓创新精神。","(4)在团员中具有较强的吸引力和凝聚力，团员队伍充分发挥模范带头作用，在本院系或者学校具有较好影响。","(5)保质保量完成年度共青团基础信息统计工作并按时录入系统；团费收缴正常；指导学生会、研究生会及学生社团组织工作有力、成绩突出。","第九条 在评选年度中有下列情况之一者，均不得评为优秀团员和优秀团干：无故不参加团组织安排的各项活动者；违反团的纪律受到支部以上点名批评者；不能按规定交纳团费的；本科生年度平均学分绩点低于2.0者；本科生学年考核不合格者；教职工年度考核不合格者；有其他违反校纪校规者。","第十条 评选比例：","1、各团委(团总支)评选的优秀团员数原则上占本单位参评团员总数的8%，评选的优秀团干数原则上占本单位参评团员总数的1%。","2、先进团支部评选比例：本单位参评团支部数在10个以下的评1个，在10至20个的可评2个，在20至30个的可评出3个，超过30个的可评4个。","3、红旗团委(团总支)根据每年基层共青团工作考评情况评出若干个。","第十一条 评选办法及程序：","1、评选优秀团员：以团员教育评议为依据，按照规定比例的团小组民主讨论提名，团支部大会通过后报所在单位审核，学校团委常委会议最终审批。","2、评选优秀团干：以团员教育评议为依据，按照规定比例由团小组民主讨论提名，团支部大会通过后报所在单位审核，学校团委常委会最终审批。","3、评选先进团支部由要求参评的团支部提出申请，各团委(团总支)按第八条规定评议报送，校团委常委会最终审批。","4、评选红旗团委(团总支)：由团委(团总支)提出申请，校团委常委会依据基层共青团工作考评情况审定。","第十二条 表彰办法：","1、学校团委发文对优秀团员、优秀团干、先进团支部以及红旗团委(团总支)予以表彰。","2、学校团委向优秀团员、优秀团干颁发证书，向先进团支部红旗团委(团总支)颁发奖牌并奖励活动经费。","3、优秀团员、团干除发给荣誉证书外，在团员证“团内奖励栏注明获奖情况，并作为团组织推优入党的重要条件。","三、附则","第十三条 本办法自公布之日起实行，由学校团委负责解释。","安徽大学学生会章程","(2020年12月修订)","第一章 总 则","第一条安徽大学学生会是在省学联的指导管理、校党委的统一领导、校党委学生工作部统筹负责和校团委具体指导下的学生组织，是依照国家法律，遵循学校规章制度，依靠全校学生独立开展工作的群众性组织，是学校联系学生的桥梁和纽带。","第二条 学生会的基本任务","(一)遵循和贯彻党的教育方针，团结和带领广大同学高举月及多 中国特色社会主义伟大旗帜，认真学习马克思列宁主义、毛泽东思想、邓小平理论、“三个代表”重要思想、科学发展观、深入学习习近平新时代中国特色社会主义指导思想和党的十九大精神，促进同学德智体美劳全面发展，团结和引导同学成为热爱祖国、适应中国特色社会主义事业要求的合格人才，进一步增强对中国特色社会主义的道路自信、理论自信、制度自信、文化自信，自觉树立和践行社会主义核心价值观，为实现中华民族伟大复兴的中国梦而努力奋斗；","(二)维护校规校纪，遵循“至诚至坚、博学笃行”的校训精神，倡导良好的校风学风，协助学校建设优良的教学秩序和学习生活环境；","(三)规范学生干部的选拔、培养和考核机制，提高学生工作能力，加强学生的群众意识、责任意识和奉献意识，积极协助学校解决同学在学习和生活中遇到的问题：","(四)广泛组织策划各种生动活泼、健康有益的校园活动，在活动中引领新时代中国特色社会主义思想，积极弘扬社会主义核心价值观：","(五)发挥学生会组织的桥梁和纽带作用，在学校党政部门与同学之间健全完善沟通协调常态机制，坚持以学生为本，坚持123为了同学、代表同学、服务同学、依靠同学的宗旨，从同学中来。列同学中去。促进同学之间、同学与教职工之间的团结。组织能权服务，收集和反映同学的建议。意见和要求，积极参与学校民主管理，在维护国家和人民利益的前提下，正确代表和维护同学的正当利益；","(六)紧密结合高等教育改革发展和学校“双一流”建设的新形势，主动适应广大同学成长成才的新要求，以坚持和完善学生代表大会制度为重点，全面强化自身职能，服务同学成长成才，提高组织公信力，不断增强在同学中的吸引力，努力将安徽大学学生会组织建设成根植同学的共同家园、凝聚人心的温暖集体、运转高效的网络体系；","(七)引导和支持学生社团健康发展，配合团组织加强对学生社团的管理和服务。","第三条安徽大学学生会遵守中华全国学联章程和安徽省学联章程，为中华全国学生联合会和安徽省学生联合会的团体成员。","第二章 会 员","第四条 学生会是学生的群众性组织，凡取得安徽大学学籍的全日制在校本、专科生，不分民族、性别，只要承认本会章程，均为本会会员。","第五条 会员的基本权利","(一)通过符合学生会章程的民主程序，讨论和决定学生会的重大事务；","(二)对学生会工作提出建议、批评和监督；","(三)有选举权和被选举权。","第六条 会员的基本义务","(一)遵守学生会章程，执行学生会决议；","(二)树立学生会良好形象，维护学生会声誉；","(三)维护同学的正当权益，反映同学的建议和需求。","第三章 组织和职能","第七条 学生会组织原则是民主集中制。","第八条 全校学生代表大会是学校学生会的最高权力机关。全校学生代表大会每年召开一次，在特殊情况下，可以提前成难远举行，代表经班级团支部推荐、学院(系)学生会组织选产生，代表名额一般不低于所联系学生人数的18，名额分配要覆盖各个学院(系)、年级，其中非校、院(系)学生会骨干学生代表不低于60%，学生代表进行选举和通过决议实行表决制。全校学生代表大会行使下列职权：","(一)审议和批准校学生委员会的工作报告；","(二)审查和决定学生会的工作方针和任务；","(三)开展学生代表提案工作，为学校工作提供意见和建议：","(四)修订学生会章程；","(五)选举新一届学生委员会和学生会主席团。","第九条 学生委员会由全校学生代表大会(以下简称学代会)选举产生，是学代会闭会期间的常设机构。学生委员会行使下列职权：","(一)在学代会闭会期间，执行大会决议，决定学生会重大事项：","(二)讨论制定学生会工作计划，并做好工作总结；","(三)在下次学代会召开前，负责组建筹备工作领导小组，进行大会的筹备工作。","第十条 校学生会主席团是校学生会的常设机关，由学生代表大会选举产生，实行集体领导下的分工负责制。校学生会主席团人数设置不超过5名，且每一届主席团任期1年。探索实行轮值制度，校学生会主席团集体负责校学生会重大事项，以学期为一个轮值周期，执行主席由主席团成员轮值担任，负责召集会议、牵头日常工作。校学生会工作人员中来自各院(系)学生会的成员一般不少于50%，由班级团支部推荐，经院(系)团组织同意，由学校党委学生工作部门和学校团委审核后确定。校学生会工作人员应是共产党员或共青团员，理想信念坚定，有强烈的爱国意识、爱国情感，积极弘扬和践行社会主义核心价值观。校学生会工作人员应当是学有余力、学业优良的学生，学习成绩综合排名应在本专业前30%以内，且无课业不及格的情况，校学生会主席团成员要起到率先示范作用。","第十一条校学生会主席团行使的职权","(一)主持校学生会日常工作；","(二)定期主持召开学生委员会全体会议，研究每一时段工作进展，分析情况，落实措施；","(三)充分行使学代会常设机构学生委员会赋予的职权，并定期向学生委员会述职，对委员会负责，接受委员会和代表的评价和监督；","(四)代表校学生会参加全国学联和省学联及学校召开的有关会议，加强与各院系之间的联系。","第十二条 校学生会的内设职能机构和人数规模将严格按照团中央、教育部及中华全国学联等要求，科学合理设置，校级学生会工作人员一般为40人左右，原则上不超过60人，主席团成员不超过5人，工作部门一般不超过6个，每个工作部门设负责人2至3人，工作人员一般不超过6人。校学生会确需主办重大工作或活动时，可根据需要以项目化方式招募志愿者，因事用人、事完人散。","第十三条 院系学生会是校学生会的基层组织，在院系党委(总支)领导下，院系团委(总支)和校学生会指导下，遵守校规校纪，创造性地开展工作。","(一)院系学生会主席团定期向学生委员会汇报工作。在必要情况下，院系学生会主席团可列席校级学生会主席团会议；","(二)院系学生会的人数规模将严格按照团中央、教育部以及中华全国学联等要求，坚持精简原则，院系学生会工作人员一52至30人，主席团成负不超过3人，除学生会主席团成员工作部门成员外，的不设置其他任何职务。院系学生会工作人是学习成绩综合排名应当在本专业前30%以内，且无课业不及存情况。第十四条班委会是学生会的最基层组织，受校、院系学生会的工作指导。","第十五条 校学生会对院系学生会和班委会负有指导职责，要通过健全完善联席会议制度等方式，加强对院系学生会和班委会的联系、指导和帮助，进一步深化校院班三级联动的工作格局。","校学生会每年通过集中会议或书面形式，听取全部院系学生会工作报告及意见建议。","第十六条 校学生会严格落实《学生会研究生会干部自律公约》，践行学生会宗旨。加强日常教育管理，坚决防范和克服功利化、庸俗化、“小官僚”等问题。面向广大同学，依法依章程开展活动、接受管理，活动内容积极向上。在决定重要事项或开展重大活动时，事先向校团委报告。学生会工作人员出现违反校规校纪、道德失范以及与学生不相称行为问题的，校学生会及时上报校团委，由校团委按规定和程序及时予以处理。","第十七条 学生会述职评议制度","组建以学生代表为主，学校党委学生工作部、学校团委等共同参与的评议会，学生会主席团成员和工作部门负责人每学期向评议会述职，评议会从政治态度、道德品行、学习情况、工作成效、纪律作风等方面对其进行全面客观的综合评价。","第十八条 学生会组织骨干选拔、考核与退出条件及程序","(一)学生会骨干候选人要求面向广大同学进行选拔，对被选拔的同学进行综合测评。过程公开透明、公平竞争，确保广大同学的知情权、参与权，选拔结果公示；","(二)每学年须对学生会骨干成员的工作态度、工作能力、学风学纪、思想道德等方面进行考核，促进学生会工作效率的提高127","(三)对于无法完成学业、违纪违法以及不能正常履行职责的学生骨干，应予以劝退、免职或罢免。","第四章附 则","第十九条 学生会活动经费来自学校相关资金支持。","第二十条 本章程的解释权属于安徽大学学生委员会。","第二十一条 本章程经学生代表大会讨论并征求学生代表意见，以及校党委和省学联同意，于省学联批复核准之日起生效。","中国共产主义青年团纪律处分条例","（试行）","（2022年1月25日共青团十八届六中全会审议通过　2022年1月28日发布","2024年8月31日共青团十九届三中全会修订　2024年9月10日发布）","第一章　总　则","第一条　为了维护团章和其他团内规章，严肃团的纪律，纯洁团的组织，保障团员民主权利，教育团员坚决拥护党的领导，遵守国家法律法规，保证党的理论、路线、方针、政策和团的决议的贯彻执行，根据《中国共产主义青年团章程》，制定本条例。","第二条　团的纪律建设必须坚持党的领导，坚持以马克思列宁主义、毛泽东思想、邓小平理论、“三个代表”重要思想、科学发展观、习近平新时代中国特色社会主义思想为指导，坚决维护习近平总书记党中央的核心、全党的核心地位，坚决维护以习近平同志为核心的党中央权威和集中统一领导，弘扬伟大建党精神，坚持自我革命，贯彻全面从严治党战略方针，落实党建带团建的各项要求，健全全面从严管团治团体系，全面加强团的纪律建设，为动员引领广大团员青年在以中国式现代化全面推进强国建设、民族复兴伟业中挺膺担当提供坚强纪律保障。","第三条　团章是管团治团的总规矩。团的纪律是团的各级组织和全体团员必须遵守的行为规则，是维护团在党的领导下的团结统一、完成党赋予的职责使命的保证。团组织和团员必须坚守初心使命，牢固树立政治意识、大局意识、核心意识、看齐意识，始终坚定道路自信、理论自信、制度自信、文化自信，自觉遵守和维护团章，严格执行和维护团的纪律，自觉接受团的纪律约束，模范遵守国家法律法规。","第四条　团的纪律处分工作遵循下列原则：","（一）坚持党的领导，全面从严管团治团。把严的基调、严的措施、严的氛围长期坚持下去，把坚持党的领导贯彻落实到对团的各级组织和全体团员的教育、管理、监督全过程，把纪律挺在前面，抓早抓小、防微杜渐。","（二）团纪面前一律平等。对违犯团纪的团组织和团员必须严肃、公正执行纪律，团内不允许有任何不受纪律约束的团组织和团员。","（三）实事求是。对团组织和团员违犯团纪的行为，应当以团章、其他团内规章和国家法律法规为准绳，准确认定行为性质，区别不同情况，恰当予以处理。","（四）民主集中制。实施团纪处分，应当按照规定程序经团组织集体讨论决定，不允许任何个人或者少数人擅自决定和批准。上级团组织对违犯团纪的团组织和团员作出的处理决定，下级团组织必须执行。","（五）教育为主、宽严相济。对于违犯团纪的团员，团组织应当根据其身心发展规律和特点，本着惩前毖后、治病救人的精神，按照违纪性质和情节轻重，给予谈话提醒直至团纪处分，做到教育与惩戒相结合。","第五条　本条例适用于违犯团纪应当受到团纪责任追究的团组织和团员。","第二章　违纪与纪律处分","第六条　团组织和团员违反团章和其他团内规章，违反国家法律法规，违反党和国家政策，违反社会主义道德，危害党、国家和人民利益，损害团的事业和形象的行为，依照规定应当给予纪律处理或者处分的，都必须受到追究。","第七条　对团员的纪律处分种类：","（一）警告；","（二）严重警告；","（三）撤销团内职务；","（四）留团察看；","（五）开除团籍。","具有团籍的党员在接受党纪处分的同时，进行相应团纪处分。","第八条　对于违犯团纪的团组织，上级团组织应当责令其作出书面检查或者给予通报批评。对于严重违犯团纪、本身又不能纠正的团组织，上一级团的委员会查明核实后，根据情节严重的程度，向其同级党组织建议予以改组或者解散；无同级党组织的，上一级团的委员会可直接予以改组或者解散。","对于受到改组处理的团组织领导机构成员，除应当受到撤销团内职务以上处分的外，均自然免职。","对于受到解散处理的团组织中的团员，应当逐个审查。其中，符合团员条件的，应当参加新的组织过团的生活；不符合团员条件的，应当对其进行教育、限期改正，经教育仍无转变的，予以劝退或者除名；有违犯团纪行为的，依照规定予以追究。","第九条　团员受到警告处分六个月内、受到严重警告处分一年内，不得在团内提拔职务或者进一步使用，也不得向党组织或者其他组织推荐担任高于其原任职务的职务或者进一步使用。","第十条　撤销团内职务处分，是指撤销受处分团员由团内选举或者组织任命的团内职务。由党组织任命的应建议党组织进行撤销。","对于在团内担任两个以上职务的，团组织在作处分决定时，应当明确是撤销其一切职务还是一个或者几个职务。如果决定撤销其一个职务，必须撤销其担任的最高职务。如果决定撤销其两个以上职务，则必须从其担任的最高职务开始依次撤销。","对于应当受到撤销团内职务处分，但是本人没有担任团内职务的，应当给予其严重警告处分。","团员受到撤销团内职务处分，或者依照前款规定受到严重警告处分的，一年半内不得在团内担任与其原任职务相当或者高于其原任职务的职务，也不得向党组织或者其他组织推荐担任与其原任职务相当或者高于其原任职务的职务。","第十一条　留团察看的时间为六个月或者一年。对于受到留团察看处分六个月的团员，期满后仍不符合恢复团员权利条件的，应当延长六个月留团察看期限。留团察看期限最长不得超过一年。","团员受留团察看处分期间没有表决权、选举权和被选举权，不得作青年入团的介绍人。留团察看期满，改正了错误的，应当及时恢复其团员权利；坚持错误不改，或者留团察看期间又发现其他应当受到团纪处分的违纪行为的，应当开除团籍。","团员受到留团察看处分，其团内职务自然撤销。受到留团察看处分的团员，恢复团员权利后二年内，不得在团内担任与其原任职务相当或者高于其原任职务的职务，也不得向党组织或者其他组织推荐担任与其原任职务相当或者高于其原任职务的职务。","第十二条　团员受到开除团籍处分，原则上不得重新入团。","第十三条　团的各级代表大会的代表受到留团察看以上处分的，团组织应当终止其代表资格。","第十四条　团员受到团纪处分，当年教育评议等次不得评定为“优秀”，并取消当年团内评优表彰资格，二年内不得推荐其作为入党积极分子人选。","第三章　团纪处分运用规则","第十五条　有下列情形之一的，可以从轻或者减轻处分：","（一）主动交代本人应当受到团纪处分的问题；","（二）在组织调查过程中，能够配合调查工作，如实说明本人违纪违法事实；","（三）检举其他人应当受到团纪处分或者法律追究的问题，经查证属实，或者有其他立功表现；","（四）主动挽回损失、消除不良影响或者有效阻止危害结果发生；","（五）主动上交或者退赔违纪所得；","（六）团内规章规定的其他从轻或者减轻处分情形。","未满18周岁团员应当受到团纪责任追究的，减轻处分。","第十六条　对于团员违犯团纪应当给予警告或者严重警告处分，但是具有本条例第十五条规定的情形之一或者本条例中另有规定的，可以给予批评教育、责令检查或者通报批评，免予团纪处分。对违纪团员免予处分，应当作出书面结论。","团员有作风纪律方面的苗头性、倾向性问题或者违犯团纪情节轻微的，可以给予谈话提醒、批评教育或者责令检查，不予团纪处分。","团员行为虽然造成损失或者后果，但不是出于故意或者过失，而是由于不可抗力等原因所引起的，不追究团纪责任。","第十七条　对违犯团纪情节本应适用警告处分，但初次违纪的，免予团纪处分，本着教育为主的原则，给予批评教育、责令检查或者通报批评。","第十八条　有下列情形之一的，应当从重或者加重处分：","（一）强迫、唆使他人违纪；","（二）拒不上交或者退赔违纪所得；","（三）违纪受处分后又因故意违纪应当受到团纪处分；","（四）违纪受处分后，又被发现其受处分前没有交代的其他应当受到团纪处分的问题；","（五）团内规章规定的其他从重或者加重处分情形。","团干部应当受到团纪责任追究的，视情节从重处分。","第十九条　团员在团纪处分影响期内又受到团纪处分的，其影响期为原处分尚未执行的影响期与新处分影响期之和。","第二十条　从轻处分，是指在本条例规定的违纪行为应当受到的处分幅度以内，给予较轻的处分。","从重处分，是指在本条例规定的违纪行为应当受到的处分幅度以内，给予较重的处分。","减轻处分，是指在本条例规定的违纪行为应当受到的处分幅度以外，减轻一档给予处分。","加重处分，是指在本条例规定的违纪行为应当受到的处分幅度以外，加重一档给予处分。","本条例规定的只有开除团籍处分一个档次的违纪行为，不适用减轻处分的规定。","第二十一条　一人有本条例规定的两种以上应当受到团纪处分的违纪行为，应当合并处理，按其数种违纪行为中应当受到的最高处分加重一档给予处分；其中一种违纪行为应当受到开除团籍处分的，应当给予开除团籍处分。","一个违纪行为同时触犯本条例两个以上条款的，依照处分较重的条款定性处理。","二人以上共同故意违纪的，对为首者，从重处分，本条例另有规定的除外；对其他成员，按照其在共同违纪中所起的作用和应负的责任，分别给予处分。","第二十二条　违纪行为有关责任人员的区分：","（一）直接责任者，是指在其职责范围内，不履行或者不正确履行自己的职责，对造成的损失或者后果起决定性作用的团员或者团干部；","（二）主要领导责任者，是指在其职责范围内，对主管的工作不履行或者不正确履行职责，对造成的损失或者后果负直接领导责任的团干部；","（三）重要领导责任者，是指在其职责范围内，对应管的工作或者参与决定的工作不履行或者不正确履行职责，对造成的损失或者后果负次要领导责任的团干部。","本条例所称领导责任者，包括主要领导责任者和重要领导责任者。","第二十三条　对团员的纪律处分，一般应当经支部大会讨论通过，由其所在基层委员会报县级或者县级以上团的委员会批准；批准后，报同级党的基层委员会备案。在特殊情况下，县级和县级以上各级团的委员会有权直接决定给团员以纪律处分；涉及的问题比较重要或者复杂，或者对团员给予开除团籍处分的，必须经团的省级或者中央委员会核准。","第二十四条　支部大会在讨论决定对团员的处分时，除特殊情况外，应当吸收本人参加，认真听取本人的意见；决定后本人不服的，可以提出申诉，有关团组织必须负责处理或者在一个月内转递，不得扣压。","第二十五条　对于违纪行为所获得的不当利益，应当按照规定予以收回或者纠正。","第二十六条　团纪处分决定作出后，应当在一个月内向受处分团员所在团的基层组织中的全体团员及其本人宣布。执行团纪处分决定的团组织，应当在三个月内将处分决定的执行情况向作出或者批准处分决定的团组织报告。","第二十七条　受到团纪处分的，应当在其团员档案中予以记录。未满18周岁团员的团纪处分记录，由团的省级委员会封存，不得向任何单位或者个人提供，有关单位根据国家规定进行查询的除外；按照规定进行查询的单位和个人应当经团的省级或者中央委员会同意，并对相关信息予以保密。","第二十八条　对违犯团纪的受理、核实、审查、情节认定、处分建议等由县级或者县级以上团的委员会组织部门办理。","第二十九条　团员因违犯团纪受到处分，影响期满后，团组织无需取消对其的处分。","第四章 对违反纪律行为的处分","第三十条 本条例所称以上、以下，除有特别标明外均含本级、本数。","第三十一条 理想信念缺失，政治立场动摇，有下列行为之一，情节较轻的，给予警告处分；情节较重的，给予撤销团内职务或者留团察看处分；情节严重的，给予开除团籍处分：","（一）反对党的集中统一领导，违背、歪曲、否定党的基本理论、基本路线、基本方略；","（二）丑化党和国家形象，或者诋毁、诬蔑党和国家领导人、英雄模范，或者歪曲党的历史；","（三）组织、参加非法集会、游行、示威等活动；","（四）通过网络、广播、电视、报刊、传单、书籍等，或者利用讲座、论坛、报告会、座谈会等方式，公开发表违背四项基本原则，违背、歪曲党的改革开放决策，或者其他有严重政治问题的文章、演说、宣言、声明等；","（五）有其他违反政治纪律和政治规矩的言行。","第三十二条 制作、贩卖、传播第三十一条所列内容之一的报刊、书籍、音像制品、电子读物，以及网络文本、图片、音频、视频资料等，情节较轻的，给予警告或者严重警告处分；情节较重的，给予撤销团内职务或者留团察看处分；情节严重的，给予开除团籍处分。","私自携带、寄递第三十一条所列内容之一的报刊、书籍、音像制品、电子读物等入出境，情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务、留团察看或者开除团籍处分。","私自阅看、浏览、收听第三十一条所列内容之一的报刊、书籍、音像制品、电子读物，以及网络文本、图片、音频、视频资料等，情节严重的，给予警告、严重警告或者撤销团内职务处分。","第三十三条 违反党和国家民族、宗教政策，情节较轻的，给予警告或者严重警告处分；情节较重的，给予撤销团内职务或者留团察看处分；情节严重的，给予开除团籍处分。","对不明真相被裹挟参加，经批评教育后确有悔改表现的，可以免予处分或者不予处分。","第三十四条 对信仰宗教的团员，应当加强思想教育，要求其限期改正；经团组织帮助仍没有转变的，应当劝其退团；劝而不退的，予以除名；参与利用宗教搞煽动活动的，给予开除团籍处分。","组织、参加会道门或者邪教组织的，对策划者、组织者和骨干分子，给予开除团籍处分。对其他参加人员，情节较轻的，给予警告或者严重警告处分；情节较重的，给予撤销团内职务或者留团察看处分；情节严重的，给予开除团籍处分。对不明真相的参加人员，经批评教育后确有悔改表现的，可以免予处分或者不予处分。","组织迷信活动的，给予撤销团内职务或者留团察看处分；情节严重的，给予开除团籍处分。参加迷信活动或者个人搞迷信活动，造成不良影响的，给予警告或者严重警告处分；情节较重的，给予撤销团内职务或者留团察看处分；情节严重的，给予开除团籍处分。对不明真相的参加人员，经批评教育后确有悔改表现的，可以免予处分或者不予处分。","第三十五条 对在国(境)外或者在涉外活动中，言行损害党和国家尊严、利益，情节较轻的，给予警告或者严重警告处分；情节较重的，给予撤销团内职务或者留团察看处分；情节严重的，给予开除团籍处分。","第三十六条　违反民主集中制原则，拒不执行、擅自改变党组织作出的决定或者团组织作出的重要决定，情节较轻的，给予批评教育、责令检查或者通报批评；情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务或者留团察看处分。","第三十七条　在党组织、团组织纪律审查中，依法依规负有作证义务的团员拒绝作证或者故意提供虚假情况，情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务、留团察看或者开除团籍处分。","第三十八条　侵犯团员的表决权、选举权、被选举权或者其他权利，情节较轻的，给予批评教育、责令检查或者通报批评；情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务处分。","第三十九条　利用信息网络造谣传谣、污蔑诽谤或者实施网络暴力，造成不良影响的，给予批评教育、责令检查或者通报批评，情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务、留团察看或者开除团籍处分。","第四十条　违背社会公序良俗，违反社会公德、职业道德、家庭美德，造成不良影响的，给予批评教育、责令检查或者通报批评，情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务、留团察看或者开除团籍处分。","第四十一条　漠视、脱离青年，其言行损害团组织形象，或者造成其他不良影响的，给予批评教育、责令检查或者通报批评；情节严重的，给予警告或者严重警告处分。","第四十二条　利用团员发展、团组织推荐优秀团员作为入党积极分子人选、代表委员遴选、评奖评优、工作评比评价等权力谋取私利，情节较轻的，给予批评教育、责令检查或者通报批评，情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务、留团察看或者开除团籍处分。","第四十三条　在团费收缴、使用和管理过程中，存在违规收缴、侵占挪用等行为的，对直接责任者和领导责任者，情节较轻的，给予警告处分；情节较重的，给予严重警告或者撤销团内职务处分；情节严重的，给予留团察看或者开除团籍处分。","第四十四条　擅自举办评比达标表彰、创建示范活动或者借评比达标表彰、创建示范活动收取费用的，对直接责任者和领导责任者，情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务处分。","第四十五条　采取弄虚作假或者其他手段把不符合团员条件的人发展为团员，对直接责任者和领导责任者，给予警告或者严重警告处分；情节严重的，给予撤销团内职务处分。","违反有关规定程序发展团员的，对直接责任者和领导责任者，依照前款规定处理。","第四十六条　对团属报刊、网站、新媒体平台等宣传舆论阵地，管理不善、把关不严，发表或者传播不当言论，造成不良影响的，对直接责任者和领导责任者给予批评教育、责令检查或者通报批评；情节较重的，给予警告、严重警告或者撤销团内职务处分。","第四十七条　工作中不敢斗争、不愿担当，面对重大矛盾冲突、危机困难和党组织、团组织分配的重大攻坚任务临阵退缩，造成不良影响或者严重后果的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务、留团察看或者开除团籍处分。","第四十八条　团组织不对团员进行教育管理，不落实“三会两制一课”等制度，不管理团籍、团员档案、组织关系，造成不良后果的，对直接责任者和领导责任者，给予批评教育、责令检查或者通报批评；情节较重的，给予警告或者严重警告处分。","第四十九条　团组织在团内统计等工作中弄虚作假，造成不良后果的，对直接责任者和领导责任者，情节较轻的，给予批评教育、责令检查或者通报批评；情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务、留团察看或者开除团籍处分。","第五十条　下级团组织拒不执行或者擅自改变上级团组织决定的，对直接责任者和领导责任者，情节较轻的，给予批评教育、责令检查或者通报批评；情节较重的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务或者留团察看处分。","第五十一条　不履行全面从严管团治团主体责任或者履行全面从严管团治团主体责任不力，给团组织造成严重损害或者严重不良影响的，对直接责任者和领导责任者，给予警告或者严重警告处分；情节严重的，给予撤销团内职务或者留团察看处分。","第五十二条　生活奢靡、铺张浪费、贪图享乐、追求低级趣味，造成不良影响的，给予警告或者严重警告处分；情节严重的，给予撤销团内职务处分。","第五十三条　有其他违反纪律规定行为的，应当视具体情节给予批评教育直至团纪处分。","第五章　对违法犯罪团员的团纪处分","第五十四条　对违法犯罪的团员，应当按照规定给予团纪处分，做到适用纪律和适用法律有机融合。","第五十五条　团员被依法留置、逮捕的，应当中止其表决权、选举权和被选举权等团员权利。根据监察机关、司法机关处理结果，可以恢复其团员权利的，应当及时予以恢复。","第五十六条　团员犯罪情节轻微，人民检察院依法作出不起诉决定的，或者人民法院依法作出有罪判决并免予刑事处罚的，应当给予撤销团内职务、留团察看或者开除团籍处分。","团员犯罪，被单处罚金的，依照前款规定处理。","第五十七条　团员犯罪，有下列情形之一的，应当给予开除团籍处分：","（一）因故意犯罪被依法判处刑法规定的主刑（含宣告缓刑）；","（二）被单处或者附加剥夺政治权利；","（三）因过失犯罪，被依法判处三年以上（不含三年）有期徒刑。","因过失犯罪被判处三年以下有期徒刑或者被判处管制、拘役的，一般应当开除团籍。对于个别可以不开除团籍的，应当报请团的中央委员会批准。","第五十八条　团员依法受到刑事责任追究的，团组织应当根据司法机关的生效判决、裁定、决定及其认定的事实、性质和情节，依照本条例规定给予团纪处分。","团员依纪依法受到党纪处分、政务处分、任免机关（单位）给予的处分、行政处罚，应当追究团纪责任的，团组织可以根据生效的处分、行政处罚决定认定的事实、性质和情节，经核实后依照规定给予批评教育直至团纪处分。","团员违反国家法律法规、企事业单位或者其他社会组织的规章制度受到其他处分，应当追究团纪责任的，团组织在对有关方面认定的事实、性质和情节进行核实后，依照规定给予批评教育直至团纪处分。","第六章　附　则","第五十九条　中央军委政治工作部可根据本条例，制定相关规定。","第六十条　本条例由共青团中央组织部负责解释。","第六十一条　本条例自2025年1月1日起施行。","本条例施行前，已结案的案件如需进行复查复议，适用当时的规定或者政策。尚未结案的案件，如果行为发生时的规定或者政策不认为是违纪，而本条例认为是违纪的，依照当时的规定或者政策处理；如果行为发生时的规定或者政策认为是违纪的，依照当时的规定或者政策处理，但是如果本条例不认为是违纪或者处理较轻的，依照本条例规定处理。","中国共产主义青年团纪律处分工作规则","（试行）","（2022年12月7日共青团中央书记处会议审议批准　2023年1月31日发布","2024年12月23日共青团中央书记处会议修订　2024年12月24日发布）","第一章　总　则","第一条　为了规范各级团组织执纪工作，推进全面从严管团治团，根据《中国共产主义青年团章程》、《中国共产主义青年团纪律处分条例（试行）》和有关团内规章，结合团纪处分工作实践，制定本规则。","第二条　团纪处分应当坚持党的领导，坚持团纪面前一律平等、实事求是、民主集中制和教育为主、宽严相济原则，做到事实清楚、证据确凿、定性准确、处理恰当、手续完备、程序合规。","第三条　本规则适用于开展团纪处分的有关工作。","第二章　处分的一般性原则","第四条　分级负责。处分违纪团员、团组织的工作权限主要依据团员、团组织的组织隶属关系确定。上级团组织有权责令下级团组织对其所管理的团员、团组织违纪情况审查核实并进行处理。团组织之间对管理事项有争议的，由其共同的上级团组织确定。","第五条　依规回避。工作人员是被审查人或者检举人近亲属、证人、利害关系人，或者存在其他可能影响公正处理情形的，不得参与相关团纪处分工作，应当主动申请回避，被审查人、检举人以及其他有关人员也有权要求其回避。","第六条　严格保密。工作人员应当控制相关工作知悉范围和时限，不准私自留存、隐匿、查阅、摘抄、复制、携带问题线索和相关资料，严禁泄露审查工作情况。","第七条　规范有序。团纪处分应当严格按照规定主体、范围、程序和批（核）准权限进行，不允许任何个人或者组织擅自决定或者批（核）准。","第三章　处分批（核）准权限","第八条　对团员的团纪处分，一般应当经支部大会讨论通过，由其所在基层委员会报县级或者县级以上团的委员会全体会议、委员会常务委员会会议或者书记会议批准。在特殊情况下，县级以上各级团的委员会全体会议、委员会常务委员会会议或者书记会议有权直接决定给予团员以团纪处分。中央企业、省（市）属企业、高等学校团的委员会全体会议、委员会常务委员会会议或者书记会议也可以批准或者直接给予团纪处分。涉及的问题比较重要或者复杂，或者对团员给予开除团籍处分的，必须经团的省级或者中央委员会全体会议、委员会常务委员会会议或者书记会议核准。","前款规定中的违纪团员系共青团中央委员、候补委员，给予撤销团内职务以上处分的，或者团员组织隶属关系在共青团中央直属机关团委的，由团的中央委员会履行处分审批程序。","市级以上团的委员会的派出代表机关（团的工作委员会）负责所属团员的团纪处分事项，依规给予批（核）准范围内的团纪处分或者上报至上级团的委员会。团的中央委员会的派出代表机关（团的工作委员会）对所属团员的团纪处分批（核）准权限与团的省级委员会相同。","行业团的工作指导和推进委员会不负责团纪处分事项。","第九条　县级以上团的委员会全体会议可以给予本级委员会委员、候补委员团纪处分。","在委员会全体会议闭会期间，委员会常务委员会会议可以先行作出给予本级委员、候补委员撤销团内职务、留团察看或者开除团籍处分的决定，待召开全体会议时予以追认。","委员会常务委员会会议批准下列处分事项：给予本级委员会委员、候补委员警告、严重警告处分；给予下一级委员会委员、候补委员撤销团内职务、留团察看或者开除团籍处分。","第十条　给予担任两个以上团内职务的违纪团员团纪处分，一般按照其中最高一级团内职务履行审批程序。","第十一条　对团员所作处分需要变更、撤销的，或者涉及恢复团员权利的，由原批（核）准处分决定的团组织履行审批程序，原批（核）准处分决定的团组织已撤销的，由继续行使其职权的团组织或者其上一级团组织履行审批程序。","第十二条　对违纪团员免予团纪处分的，按照给予其警告处分的批准权限履行审批程序。","对于应当受到撤销团内职务处分，但是本人没有担任团内职务的违纪团员，应当给予其严重警告处分，并按照给予其撤销团内职务处分的批准权限履行审批程序。","第十三条　对于应当受到撤销团内职务处分，职务由党组织任命的，应当在团纪处分依程序作出后，由批准该处分的团组织建议相应党组织撤销其职务。","第十四条　给予组织关系转出但尚未被接收的团员团纪处分，由其原所在团组织履行审批程序。该团组织已撤销或者无法履行相关程序的，由继续行使其职权的团组织或者其上一级团组织履行审批程序。","第四章　受理及审查","第十五条　各级团组织发现或者收到团员违纪相关线索，应当及时办理。本组织具备对该团员处分批准权限的，应当在一个月之内，经集体研究后提出处置意见：对反映的问题失实或者没有可能开展核查工作的，予以了结；对反映问题比较具体，有一定可查性的，应当启动初步核实。","各级团的委员会对反映本级团委委员、候补委员的相关线索，应当及时向上级团的委员会报告。其中，对反映涉及本级团委书记、副书记的相关线索，交由上级团的委员会受理。","本组织不具备对该团员处分批准权限的，应当在15个工作日内转交相关团的委员会或者由该团的委员会转交至其他有权受理的机关（单位）。","各级团组织应当加强对团员违纪相关线索的集中管理、分类处置、定期清理。","第十六条　初步核实工作应当由两人以上进行，方式一般包括当面谈话、书面问询，经批准也可采取其他必要方式收集证据、了解情况。在初步核实结束后一个月内写出情况报告和处置意见。根据不同情形作出相应处理：","（一）反映不实，或者没有证据证明存在问题的，予以了结。确有必要的，可经批准后以适当方式在一定范围内予以澄清。","（二）反映属实或者部分属实，但依照有关规定不追究团纪责任的，予以了结。","（三）反映属实或者部分属实，但依照有关规定不予团纪处分的，可以给予谈话提醒、批评教育或者责令检查。","（四）反映属实或者部分属实，存在违犯团纪行为，需要追究纪律责任的，应当提出审查的建议。","第十七条　凡启动审查程序的，应当已经掌握部分违纪事实和证据，具备进行审查的条件。负责审查工作的团的委员会经集体研究后启动审查工作，并正式通知被审查人及其所在团组织。","第十八条　审查工作应当由两人以上进行，方式一般包括实地走访、收集证据、当面谈话、书面问询等，经批准也可采取其他必要方式收集证据、了解情况。采取实地走访、收集证据方式开展审查时，可要求相关团组织作出说明。采取当面谈话方式开展审查时，应当充分听取被谈话人陈述，并做好谈话笔录，谈话笔录应由被谈话人阅看后签字。谈话后可以视情况由被谈话人写出书面说明。","已查明的违纪事实，应形成违纪事实材料，要求被审查人签署意见。对签署不同意见或者拒不签署意见的，应当作出说明或者注明情况。","审查工作应当建立健全安全责任制，负责审查工作的团组织负责人是审查安全第一责任人，做好风险评估、安全防范工作，做到全程可控。","第十九条　审查结束后应当撰写工作报告，列明基本情况、线索来源、主要事由、审查情况、处理建议及依据，由负责审查的有关人员签名备查。","审查结束后，对于免予团纪处分的，应当作出书面结论。","第二十条　团员依法受到刑事责任追究的，团组织应当按程序给予团纪处分。","团员依纪依法受到党纪处分、政务处分、任免机关（单位）给予的处分、行政处罚的，团组织应当按程序开展审查。","团员违反国家法律法规、企事业单位或者其他社会组织的规章制度受到其他处分，团组织应当进行初步核实，确需追究团纪责任的，按程序开展审查。","对于具有团籍的党员发现或者收到违犯党纪或者职务违法、职务犯罪的，团组织应当移送具有管辖权的纪检监察机关。","第二十一条　各级团组织应当建立受理及审查管理台账，载明处理过程和结论。","第二十二条　在初步核实和审查过程中，有关团组织和工作人员应当严格按规定、按授权开展工作。对于说情干预、跑风漏气、以案谋私、办人情案等情况，依照有关规定严肃追责、从重处理。","第五章　处分作出及审批","第二十三条　团支部大会讨论对团员的团纪处分，须有半数以上有表决权的团员到会方可进行，赞成人数超过应到会有表决权团员的半数为通过。讨论通过后，须在15个工作日内报所在团的基层委员会。","在支部大会讨论时，被审查人有权参加和进行申辩，其陈述和申辩的内容须如实记录、及时核实，合理的予以采纳；不予采纳的，应当说明理由。","第二十四条　团的基层委员会审议并作出团纪处分决定，须有三分之二以上委员到会方可进行，须由到会委员三分之二以上多数决定。决定作出后，经同级党的基层委员会同意后，须在15个工作日内上报至县级或者县级以上团的委员会批准。","第二十五条　县级以上团的各种委员会全体会议、委员会常务委员会会议或者书记会议审议团纪处分决定，须有三分之二以上人员到会方可进行，须由到会人员三分之二以上多数决定。","第二十六条　团组织在日常监督管理中，发现团员违纪涉嫌犯罪的，团纪处分决定原则上应于司法机关处理结果前作出。案情疑难、复杂，对事实证据、行为性质的认定把握困难或者有重大争议，可能影响团纪处分结果的，可以延后作出团纪处分决定，原则上不晚于司法机关处理结果作出的三个月内。","团组织作出团纪处分后，纪检监察机关、司法机关、行政机关等依法改变原生效判决、裁定、决定等，对原团纪处分产生影响的，团组织应当根据改变后的生效判决、裁定、决定等重新作出相应处理。","第二十七条　团纪处分决定自有处分批（核）准权限的团组织决定之日起生效。","第二十八条　对不服处分决定的申诉，由批（核）准处分的团的委员会受理。","第六章　处分宣布、记录及备案","第二十九条　团纪处分决定作出后，应当在一个月内由作出处分决定的团组织或者受处分团员所在团组织，向受处分团员所在团的基层组织中的全体团员及本人宣布或送达。","未满18周岁团员受到团纪处分后，作出处分决定的团组织应当在一个月内通知其本人及监护人，不再向受处分团员所在团组织中的全体团员宣布。","第三十条　受到警告及以上团纪处分的，应当由作出处分决定的团组织在其团员档案中予以记录。未满18周岁团员的团纪处分记录应当妥善保管，未经团的省级委员会或者中央委员会同意，不得向其他单位或者个人提供。","第三十一条　执行团纪处分决定的团组织，应当在三个月内将处分决定的执行情况向作出或者批（核）准处分决定的团组织报告。","第三十二条　团纪处分批（核）准后，由受处分团员所在团的基层委员会报同级党的基层委员会备案。","第七章　附　则","第三十三条　本规则所称以上、以下，除有特别标明外均含本级、本数。","第三十四条　本规则由共青团中央组织部负责解释。","第三十五条　本规则自2025年1月1日起施行。","此前发布的其他有关团纪处分工作规则的规定，凡与本规则不一致的，按照本规则执行。","国家教育考试违规处理办法","(节选)","第二章 违规行为的认定与处理","第五条 考生不遵守考场纪律，不服从考试工作人员的安排与要求，有下列行为之一的，应当认定为考试违纪：","(一)携带规定以外的物品进入考场或者未放在指定位置的；","(二)未在规定的座位参加考试的；","(三)考试开始信号发出前答题或者考试结束信号发出后维续答题的；","(四)在考试过程中旁窥、交头接耳、互打暗号或者手势的；","(五)在考场或者教育考试机构禁止的范围内，喧哗、吸烟或者实施其他影响考场秩序的行为的；","(六)未经考试工作人员同意在考试过程中擅自离开考场的；","(七)将试卷、答卷(含答题卡、答题纸等，下同)、草稿纸等考试用纸带出考场的；","(八)用规定以外的笔或者纸答题或者在试卷规定以外的地方书写姓名、考号或者以其他方式在答卷上标记信息的；","(九)其他违反考场规则但尚未构成作弊的行为。","第六条 考生违背考试公平、公正原则，在考试过程中有下列行为之一的，应当认定为考试作弊：","(一)携带与考试内容相关的材料或者存储有与考试内容相关资料的电子设备参加考试的；","(二)抄袭或者协助他人抄袭试题答案或者与考试内容相关的资料的；","(三)胁迫他人为自己抄袭提供方便的；","(四)携带具有发送或者接收信息功能的设备的；","(五)由他人冒名代替参加考试的；","(六)故意销毁试卷、答卷或者考试材料的；","(七)在答卷上填写与本人身份不符的姓名、考号等信息的：","(八)传、接物品或者交换试卷、答卷、草稿纸的：","(九)其他以不正当手段获得或者试图获得试题答案、考试成绩的行为。","第七条 教育考试机构、考试工作人员在考试过程中或者在考试结束后发现下列行为之一的，应当认定相关的考生实施了考试作弊行为：","(一)通过伪造证件、证明、档案及其他材料获得考试资格、加分资格和考试成绩的；","(二)评卷过程中被认定为答案雷同的；","(三)考场纪律混乱、考试秩序失控，出现大面积考试作弊现象的；","(四)考试工作人员协助实施作弊行为，事后查实的；","(五)其他应认定为作弊的行为。","第八条 考生及其他人员应当自觉维护考试工作场所的秩序，服从考试工作人员的管理，不得有下列扰乱考场及考试工作场所秩序的行为：","(一)故意扰乱考点、考场、评卷场所等考试工作场所秩序；","(二)拒绝、妨碍考试工作人员履行管理职责：","(三)威胁、侮辱、诽谤、诬陷或者以其他方式侵害考试工作人员、其他考生合法权益的行为；","(四)故意损坏考场设施设备；","(五)其他扰乱考试管理秩序的行为。","第九条 考生有第五条所列考试违纪行为之一的，取消该科目的考试成绩。","考生有第六条、第七条所列考试作弊行为之一的，其所报名参加考试的各科、各阶段成绩无效；参加高等教育自学考试的，当次考试成绩各科成绩无效。","有下列情形之一的，可以视情节轻重，同时给予暂停参加该项考试1至3年的处理；情节特别严重的，可以同时给予暂你多加各种国家教育考试1至3年的处理：","(一)组织团伙作弊的；","(二)向考场外发送、传递试题信息的；","(三)使用相关设备接收信息实施作弊的；","(四)伪造、变造身份证、准考证及其他证明材料，由他人代替或者代替考生参加考试的。","参加高等教育自学考试的考生有前款严重作弊行为的，也可以给予延迟毕业时间1至3年的处理，延迟期间考试成绩无效。","第十条 考生有第八条所列行为之一的，应当终止其继续参加本科目考试，其当次报名参加考试的各科成绩无效；考生及其他人员的行为违反《中华人民共和国治安管理处罚法》的，由公安机关进行处理；构成犯罪的，由司法机关依法处理追究刑事责任。","第十一条 考生以作弊行为获得的考试成绩并由此取得相应的学位证书、学历证书及其他学业证书、资格资质证书或者入学资格的，由证书颁发机关宣布证书无效，责令收回证书或者予以没收；已经被录取或者入学的，由录取学校取消录取资格或者其学籍。","第十二条 在校学生、在职教师有下列情形之一的，教育考试机构应当通报其所在学校，由学校根据有关规定严肃处理，直至开除学籍或者予以解聘：","(一)代替考生或者由他人代替参加考试的；","(二)组织团伙作弊的；","(三)为作弊组织者提供试题信息、答案及相应设备等参与团伙作弊行为的。","第十三条 考试工作人员应当认真履行工作职责，在考试管理、组织及评卷等工作过程中，有下列行为之一的，应当停止其参加当年及下一年度的国家教育考试工作，并由教育考试机构或者建议其所在单位视情节轻重分别给予相应的行政处分：","(一)应回避考试工作却隐瞒不报的；","(二)擅自变更考试时间、地点或者考试安排的；","(三)提示或暗示考生答题的；","(四)擅自将试题、答卷或者有关内容带出考场或者传递给他人的： (五)未认真履行职责，造成所负责考场出现秩序混乱、作蔡严重或者视频录像资料损毁、视频考试系统不能正常工作的：","(六)在评卷、统分中严重失职，造成明显的错评、漏评或者积分差错的；","卷的；不按评分细则进行评","(八)因未认真履行职责，造成所负责考场出现雷同卷的；","(九)擅自泄露评卷、统分等应予保密的情况的；","(十)其他违反监考、评卷等管理规定的行为。","第十四条 考试工作人员有下列作弊行为之一的，应当停止其参加国家教育考试工作，由教育考试机构或者其所在单位视情节轻重分别给予相应的行政处分，并调离考试工作岗位；情节严重，构成犯罪的，由司法机关依法追究刑事责任：","(一)为不具备参加国家教育考试条件的人员提供假证明、证件、档案，使其取得考试资格或者考试工作人员资格的；","(二)因玩忽职守，致使考生未能如期参加考试的或者使考试工作遭受重大损失的；","(三)利用监考或者从事考试工作之便，为考生作弊提供条件的；","(四)伪造、变造考生档案(含电子档案)的；","(五)在场外组织答卷、为考生提供答案的；","(六)指使、纵容或者伙同他人作弊的；","(七)偷换、涂改考生答卷、考试成绩或者考场原始记录材料的；","(八)擅自更改或者、编造、虚报考试数据、信息的；","(九)利用考试工作便利，索贿、受贿、以权徇私的；","(十)诬陷、打击报复考生的。 七)故曲","第十五条因教育考试机构管理混乱、考试工作人员玩忽职字，造成考点或者考场纪律混乱，作弊现象严重；或者同一考点同。时间的考试有1/5以上考场存在雷同卷的，由教育行政部门取消该考点当年及下一年度承办国家教育考试的资格；高等教育自学考试考区内一个或者一个以上专业考试纪律混乱，作弊现象严重，由高等教育自学考试管理机构给予该考区警告或者停考该考区相应专业1至3年的处理。","对出现大规模作弊情况的考场、考点的相关责任人、负责人及所属考区的负责人，有关部门应当分别给予相应的行政处分；情节严重，构成犯罪的，由司法机关依法追究刑事责任。","第十六条 违反保密规定，造成国家教育考试的试题、答案及评分参考(包括副题及其答案及评分参考，下同)丢失、损毁、泄密，或者使考生答卷在保密期限内发生重大事故的，由有关部门视情节轻重，分别给予责任人和有关负责人行政处分；构成犯罪的，由司法机关依法追究刑事责任。盗窃、损毁、传播在保密期限内的国家教育考试试题、答案及评分参考、考生答卷、考试成绩的，由有关部门依法追究有关人员的责任；构成犯罪的，由司法机关依法追究刑事责任。","第十七条 有下列行为之一的，由教育考试机构建议行为人所在单位给予行政处分；违反《中华人民共和国治安管理处罚法》的，由公安机关依法处理；构成犯罪的，由司法机关依法追究刑事责任","(一)指使、纵容、授意考试工作人员放松考试纪律，致使考场秩序混乱、作弊严重的；","(二)代替考生或者由他人代替参加国家教育考试的；","(三)组织或者参与团伙作弊的；","(四)利用职权，包庇、掩盖作弊行为或者胁迫他人作弊的；","(五)以打击、报复、诬陷、威胁等手段侵犯考试工作人员、考生人身权利的；","(六)向考试工作人员行贿的；","(七)故意损坏考试设施的；","(八)扰乱、妨害考场、评卷点及有关考试工作场所秩序后果严重的。国家工作人员有前款行为的，教育考试机构应当建议有关纪检、监察部门，根据有关规定从重处理。","安徽大学本科学生考试违规行为认定办法(校政(2021)15号)","第一条 发为进一步严肃考试纪律，维护考试秩序，规范学校本科课程考试学生违规(包含考试违纪和作弊)行为认定工作，保障参加考试人员的合法权益，根据《国家教育考试违规处理办法》(教育部33号令)有关规定，结合我校实际，制定本办法。","第二条 学生不遵守考场考核纪律，不服从监考人员安排与要求，故意扰乱考场秩序，有下列行为之一的，应当认定为考试违纪；","(一)携带规定以外的物品进入考场或者未放在指定位置的；","(二)未在规定的座位参加考试的；","(三)考试开始信号发出前答题或者考试结束信号发出后继续答题的；","(四)在考试过程中旁窥、交头接耳、互打暗号或者手势的；","(五)在考场范围内喧哗、吸烟或者实施其他影响考场秩序的行为的；","(六)未经监考人员同意在考试过程中擅自离开考场的；","(七)将试卷、答卷(含答题卡、答题纸等)等考试用纸带出考场的；","(八)拒绝、妨碍监考人员履行职责，威胁、侮辱、诽谤、诬陷或者以其他方式侵害监考人员、其他学生合法权益的行为的；","(九)其他违反考场考核纪律但尚未构成作弊行为的。","第三条 学生违背考试公平、公正原则，有下列行为之一的，应当认定为考试作弊：","(一)携带与考试内容相关的材料或者存储有与考试内容相关资料的电子设备参加考试的(考试科目另有约定的除外)；","(二)抄袭或者协助他人抄袭试题答案或者与考试内容相关的资料的；","(三)抢夺、窃取他人试卷、答卷或者胁迫他人为自己抄袭提供方便的；","(四)使用具有发送或者接收信息功能的设备的：","(五)由他人冒名或冒名他人代替参加考试的：","(六)故意销毁试卷、答卷或者其他考试材料的：","(七)交换试卷、答卷、草稿纸或未经监考人员同意传、接物品的：","(八)以不正当手段获得或者试图获得试题答案行为的；","(九)通过伪造证件、证明及其他材料获得考试资格和考试成绩的；","(十)评卷过程中被认定为答案雷同的；","(十一)组织、参与作弊的；","(十二)其他应当认定为作弊行为的。","第四条 学生违规行为认定程序：","(一)在考试过程中发现学生有第二条、第三条(一)至(八)款所列违规行为时，应当终止学生继续参加本门课程考试，该门课程成绩记为零分；监考人员须暂扣用于违规的材料、工具，当场填写《安徽大学考试违规行为认定记录表》，经违规考生签名认可后，直接认定。如违规考生拒绝签名，由两名以上监考人员或巡考人员签名认定。","(二)学生有第三条(九)、(十)、(十一)、(十二)款所列行为的，应由两名及以上工作人员进行事实调查，收集、保存相应的证据材料，并在此基础上，对所涉人员违规行为进行认定。","（三）考试结束后，监考人员应立即将《安徽大学考试违规行为认定记录表》、作弊证据、试卷交教学单位教学办公室，教学办公室汇总后应立即报教务处备案。","(四)考试结束3个工作日内，如有以书面形式实名举报考场有第二、三条违规行为的，经查实确认，应认定为考试违纪或作弊。","(五)教务处将相关材料等移交学校有关部门，根据《安徽大学学生违纪处分实施细则》视其情节给予相应处分。","第五条 本办法适用于在安徽大学普通本科课程考试中的违规行为认定，其他考核方式中出现的违规行为认定参照本办法执行。","第六条 本办法自2021年9月1日起施行，原《安徽大学学生考试违纪认定与处理暂行办法》(校政(2006)24号)同时废止。","第七条 本办法由教务处负责解释。","安徽大学学生违纪处分实施细则 (修订)","(校党字(2017)75号)","第一章 总则","第一条为维护学校正常的教育教学秩序，维护学校管理，维p学校和学生的合法权益，根据有关法律法规及《安徽大学章程》【安徽大学学生管理办法(修订)》，制定本细则。","第二条 本细则适用于在我校接受普通高等学历教育的研究生和本科、专科学生。","第三条 学生应当拥护中国共产党领导，增强法治观念，遵守宪法、法律、法规，遵守公民道德规范，遵守《高等学校学生行为准则》，遵守学校章程和规章制度并履行相关义务，维护社会稳定，具有良好的道德品质和行为习惯。","第四条 学校对违纪学生处分须坚持教育与惩戒相结合，做到事实清楚、证据充分、依据明确、定性准确、程序正当、处分适当。","第五条 纪律处分分为警告、严重警告、记过、留校察看、开除学籍等五种；学生确有错误，但情节轻微的，采用批评、通报批评等方式予以教育。","第二章 违纪行为与处分","第六条学生有违反宪法、反对四项基本原则、破坏安定团结、扰乱社会秩序行为的，可以给予开除学籍处分。","第七条 学生触犯国家法律，构成刑事犯罪的，给予开除学籍处分。","第八条学生有违反治安管理行为，由司法部门、公安机关等依法处理，学校根据违规事实和情节，给予下列处分：","(一)有违反治安管理行为，被处以三日以下拘留的，给予警告处分；","(一)有违反治安管理行为，被处以三到五日(包括五日)","拘留的，给予严重警告处分；","(三)有违反治安管理行为，被处以五日到十日(包括十日)拘留的，给予记过处分；","(四)有违反治安管理行为，被处以十日以上拘留的，视情告，给予留校察看或开除学籍处分；","第九条 学生不得在校内进行宗教活动，对不听劝阻或者造成后果的，视情节，给予警告以上处分。","第十条 参与非法传销、参加邪教组织、进行封建迷信活动，经教育不改的，视情节，给予警告以上处分。组织、教唆、胁迫、诱骗、煽动他人进行非法传销、邪教、封建迷信活动的，视情节，给严重警告以上处分。","第十一条 学生通过出版物、网络刊载存有民族歧视、侮辱或其他国家禁止内容，或利用其他方式煽动民族仇恨、民族歧视的，视情节，给予严重警告以上处分。","第十二条 盗用他人各种证卡账号和密码的(含电脑、网络用户的账号和密码)；转借学生证、校园卡或其他个人使用的证卡账号和密码(含网络用户的账号和密码)并给他人或单位造成名誉或者经济损失的，视情节，给予警告以上处分；侵害其他个人、组织合法权益，造成严重后果的，给予开除学籍处分。","第十三条 弄虚作假，谎报家庭经济状况，骗领资助款的，经发现追回资助款项，视情节，给予警告以上处分。","第十四条 对涉及学生违纪事件的检举人、证人实施威胁和打击报复的，给予警告以上处分。","第十五条对寻衅滋事、打架斗殴的，视情节，给予下列处分：","(一)打架的，给予警告以上处分；持器械打架的，给予记过以上处分；","(二)聚众斗殴，未造成人身伤害的，给予严重警告以上处分；造成人身伤害的，给予记过以上处分；组织者，给予记过以上处分：","(三)邀约校外人员到校内滋事或者打架斗殴的，给予留校察看以上处分：","(四)酗酒滋事的，视情节，给予警告以上处分：","(七)对寻衅滋事、打架斗段触犯法律、法规的，按照第八条规定处理。","第十六条威吓、辱骂、围攻教职工的，给予记过以上处分；股打教职工的，给予开除学籍处分；对拒绝、阻碍国家工作人员或学校管理人员依法执行公务的，视情节，给予记过以上处分。","第十七条吸食毒品的，视情节，给予警告以上处分。第十八条对违反学校管理规定，扰乱正常教育教学秩序、生活秩序以及公共场所管理秩序，且不听劝阻的，视情节，给予下列处分：","(一)违反教学、图书馆、食堂、宿舍楼等公共场所管理规定，妨碍他人工作、学习、生活和休息，且不听劝阻的，视情节，给予警告以上处分；违反学校管理规定，严重影响学校正常教育教学秩序、生活秩序以及公共场所管理秩序的，给予开除学籍处分。","(二)参与非法集会、游行、示威等活动，给予警告以上处分；策划、组织者，给予严重警告以上处分。","(三)在校内大型活动中，不遵守有关规定，严重扰乱秩序，视情节，给予警告以上处分；情节严重的，给予记过以上处分；未经允许，擅自在公共场所打横幅、标语、散发传单等，且不听劝阻，造成恶劣影响或产生严重后果的，视情节，给予警告以上处分。","(四)在学习、实验中违反相关规定或操作规程造成公共安全隐患的，视情节，给予警告以上处分；造成人身伤害、设备损失及其他事故的，除赔偿损失外，视情节，给予严重警告以上处分。","(五)违反公寓等场所管理规定，经教育不改的，视情节，给予警告以上处分；造成后果的，视情节，给予严重警告以上处分。","(六)违反校园消防相关管理规定，视情节，给予警告以上处分；情节严重的，给予留校察看处分。","第十九条 学生上课、政治学习、实验、实习、设计或者参加141军训、劳动、社会实践、运动会等活动，不得无故迟到、早退、缺席。对旷课(迟到或者早退累计三次计旷课1学时)者，按下列情况给予处分：","(一)一学期累计旷课达15学时的，给予警告处分；","(二)一学期累计旷课达30学时的，给予严重警告处分；","(三)一学期累计旷课达45学时的，给予记过处分：","(四)一学期累计旷课达60学时的，给予留校察看处分；","(五)一学期内学生因旷课受到纪律处分后，又继续旷课的，应当累计处分前的旷课时数，给予相应处分。","第二十条对考核(包括考试、考查)作弊或者违反考场纪律的，视情节，给予下列处分：","(一)违反考场规定、不服从监考教师安排、扰乱考场秩序的，给予警告以上处分；","(二)考试、考查作弊的，给予严重警告以上处分；","(三)由他人代替考试、替他人参加考试、组织作弊、使用通讯设备作弊或其他器材作弊、向他人出售考试试题或答案牟取利益，以及其他严重作弊或扰乱考试秩序行为的，给予开除学籍处分；","(四)干扰教师正常教学考核，经教育不改的，给予警告以上处分。","第二十一条 有剽窃、抄袭、篡改、伪造他人研究成果等违背学术道德行为的，视情节给予严重警告以上处分；学位论文、公开发表的研究成果存在抄袭、篡改、伪造等学术不端行为，情节严重的，或者代写论文、买卖论文的，给予开除学籍处分。","第二十二条学生不遵守国家和学校关于网络使用的有关规定，存有登录非法网站和传播非法文字、音频、视频资料等；编造或者传播虚假、有害信息；攻击、侵入他人计算机和移动通讯网络系统等行为，视情节，给予严重警告以上处分","第二十三条 违反社团管理规定，造成不良后果或产生不良影响的，视情节，给予警告以上处分。","第二十四条不遵守法律、法规以及学校、用工单位管理制度，不展行勤工助学活动的有关协议，未经批准，擅自不参加或者终止参加，情节严重的，给予警告或者严重警告处分；由此给相关活动造成重大损失的，视情节，给予警告以上处分。","第二十五条 从事或者参与有损大学生形象、有损社会公德、有损学校声誉、有悖社会公序良俗活动的，或存在其他违反公民道德规范行为的，视情节，给予警告以上处分。","第二十六条 对屡次违反学校规定受到纪律处分，经教育不改的，给予开除学籍处分。","第三章 处分程序","第二十七条 对违纪学生的处分，应当在调查取证的基础上形成初步的处分意见，并在听取违纪学生的陈述和申辩后，按下列程序形成处分决定：","(一)给予学生处分，由学生所在院系提出意见，学生处审核，经合规性审查后，报校长办公会议研究决定；","(二)对违纪学生，院系处理不当或者拖延不决的，由学生处提出处理意见，经合规性审查后，报校长办公会议研究决定；","(三)学生违纪事件的调查，由学生所在院系或者事件涉及的部门和单位负责，在对学生作出处分决定之前，应当告知学生作出决定的事实、理由及依据，并告知学生享有陈诉和申辩的权利，听取学生的陈诉和申辩；","(四)学生违纪事件涉及的部门和单位有权提出处分请求，违纪学生所在院系和学生处应当予以答复。","第二十八条 学校对学生作出纪律处分，一律出具处分决定书。处分决定书内容包括学生基本信息，处分事实及证据，处分种类、依据、期限，申诉的途径和期限以及其他必要内容。","处分决定书须送达学生本人，学生拒绝签收的，可以以留置方式送达：已经离校的，可以采取邮寄方式送达；难以联系的，可以通过学校学生处网站以公告方式送达。","第二十九条 学校按规定真实完整地将学生的处分及解除处分材料，归入学校文书档案和学生本人档案。","被开除学籍的学生，学校发给学习证明，档案退回其家庭所在地，户口按照国家规定迁回原籍或家庭户籍所在地。开除学籍的学生，应按照学校规定办理离校手续并限期离校。","第四章 学生申诉","第三十条学生对处分决定有异议的，在接到学校处分决定书之日起10日内，可以向学校学生申诉处理委员会提出书面申诉：学生申诉处理委员会下设办公室，办公室设在学校团委。具体申诉按照《安徽大学学生申诉处理办法》执行。","第五章 处分解除","第三十一条 除开除学籍处分以外，学生处分设置6到12个月期限，根据学生表现，到期按学校规定程序予以解除。解除处分后，学生获得表彰、奖励及其他权益，不再受原处分的影响。","第三十二条 解除处分程序","(一)学生本人提出书面申请，填写《安徽大学学生违纪处分解除申请表》","(二)辅导员参照班委会、团支部民主评议结果，形成书面评议意见。","(三)院系党政联席会议研究提出初步意见，报学生处审核。","(四)经合规性审核后，学校召开校长办公会决定是否解除学生违纪处分，并下发文件。院系负责书面告知申请人。","第六章附则","第三十三条对本细则没有列入的违纪行为，可比照本细则相近条款给予处分。","第三十四条 本细则所称的以上、以下，包括本处分或者本数。","第三十五条对在我校接受高等教育的全日制其他各类本、专科学生的违纪处分参照本细则执行。","第三十六条 学校对接受高等学历继续教育的学生、港澳台侨学生、留学生的管理，参照本规定执行。","第三十七条 本细则由学生处负责解释。","第三十八条 本规定自2017年9月1日起施行。原《安徽大学学生违纪处分实施细则》(校政(2010)23号)同时废止，其他有关文件规定与本规定不一致的，以本规定为准。","安徽大学学生申诉处理办法","(校党字(2017)75号)","第一章 总 则","第一条 为全面推进民主治校、依法办学，规范校内学生申诉制度，保证学生纪律处分和学籍处理的公正、公平、合理，保障学生的合法权益，根据《中华人民共和国教育法》、 《普通高等学校学生管理规定》等相关法律法规，遵照《安徽大学章程》《安徽大学学生管理办法(修订)》《安徽大学学生违纪处理实施细则(修订)》等文件精神，制定本办法。","第二条 本办法适用于在我校接受普通高等学历教育的研究生和本、专科学生。","第三条本办法所称的申诉，是指学生对学校作出的涉及本人权益的处理决定有异议，向学生申诉处理委员会提出对该决定进行复议的意见和要求。","第二章 处理申诉的组织","第四条 成立安徽大学学生申诉处理委员会，负责受理学生对处理或者处分决定不服提起的申诉。申诉处理委员会向校长办公会负责并报告工作。","第五条 申诉处理委员会由7名委员组成。申诉处理委员会设主任，主任由校领导(纪委书记)担任。其他委员由学校纪检监察室主任、团委书记、学生会(或研究生会)秘书长、学生会(或研究生会)主席、学生校长助理(1人，由校长委派)学校法律顾问(1人，由校长委派)担任。作为委员的各部门负责人更换时，由新任负责人接替原负责人职务。","第六条 申诉处理委员会下设办公室，办公室设在校团委，办公室主任由校团委书记兼任，办公室工作人员由校团委委派。","第七条 申诉处理委员会的职责包括：","一)受理申诉人的申诉：","二)书面审理申诉人的申诉：","(三)召开复议会议，对学生申诉的问题进行处理：","(四)提出维持原处理决定、建议撤销或变更原处理决定等汉意见报校长办公会审批，并将申诉结果送达申诉人。","第三章 申诉的受理","第八条 学生对学校作出的涉及本人权益的下列处理或者处分决定有异议，可以依照本办法向申诉处理委员会提出申诉：","(一)对学生本人作出的违纪处分决定有异议的；","(二)对取消学生本人入学资格的决定有异议的；","(三)对学生本人学籍处理的决定有异议的；","(四)法律、法规规定可以提出申诉的其它处理决定。","第九条 学生提出申诉，应当在接到学校处理决定书之日起10日内，向申诉处理委员会提出书面申诉申请和学校作出的处理决定的文件副本。申诉申请书应写明下列内容：","(一)申诉人的姓名、班级、学号及其它基本情况；","(二)申诉的事项、理由、要求并附上相关的证据、证人材料。","(三)提出申诉的日期。","第十条 申诉处理委员会办公室负责接收申诉人的书面申请，并在自接到申诉申请书之日起2日内对申诉材料进行审查，根据具体情况作出如下决定并送达申诉人：","(一)申诉请求符合本办法规定，予以受理：","(二)申诉材料不齐备，要求申诉人在2日内补正；","(三)有下列情况之一，不予受理，出具不予复议决定书：","1、申诉人不符合本办法第二条规定的申诉人资格的；","2、申诉事由不符合本办法第八条规定的申诉范围的；","3、申诉材料不齐备且在限期内未补正的。","第四章 申诉的复议程序","第十一条 申诉处理委员会应当在作出受理决定次日将中乐请书副本送达对申诉人作出处理决定的部门。作出处理决定的题门应当自收到申请书副本之日起2日内提出包括作出处理决定的事实、依据和其它相关材料的书面答复。","第十二条 申诉处理委员会处理事实清楚、证据充分、争议不大的简单申诉时，可以采取书面审查方式进行复议。申诉处理委员会认为有必要通过会议方式进行复议的，可以召开复议会议对申诉进行复议。","第十三条 采取书面审查方式进行复议的，申诉处理委员会也应对相关当事人进行询问，开展必要的查证。书面审查意见应获得申诉处理委员会全体委员三分之二以上同意，方为有效。","第十四条 采取复议会议方式进行复议的，申诉处理委员会办公室主任应当在收到双方书面材料后召集复议会议。复议会议应有三分之二以上委员到会方可举行。","第十五条 申诉人应当出席复议会议。申诉人和作出处理决定的部门代表可以依据复议程序在会议上发言。作出对申诉人所申诉的处理决定的部门的负责人是委员的，可以参与讨论，但不能参加表决。","第十六条 申诉处理委员会办公室应提前3日通知申诉人复议会议召开的时间和地点。申诉人无故不出席复议会议的，按放弃复议申请处理，申诉复议程序终止。申诉人因故不能参加复议会议的，应提前2日向办公室提出，由申诉处理委员会决定是否延期。决定不延期的，办公室应至少提前1日通知申诉人，申诉人应委托一名代理人出席。决定延期的，由办公室另行安排复议会议时间。","第十七条 复议会议主持人由申诉处理委员会办公室主任担任。复议会议应当遵循下列程序进行：","(一)主持人介绍申诉处理委员会成员；","(二)申诉人申诉；","(三)作出处理决定的部门代表陈述：","(四)申诉处理委员会进行合议：","(五)申诉处理委员会进行无记名投票表决，形成书面意见。第十八条 复议会议的意见必须经过二分之一以上到会的委员同意方为有效。","第五章 申诉复议决定","第十九条申诉处理委员会应根据复议情况提出书面意见，按照下列规定作出复议决定：","(一)原处理决定认定事实清楚，使用依据正确，程序合法的，维持原处理决定。","(二)原处理决定有下列情况之一的，建议撤销或变更原处理决定：","1、主要事实不清，证据不足的；","2、适用依据错误的；","3、原决定程序不符合规定的；","4、有证据证明作出处理决定的部门超越或滥用职权，或相关人员有徇私枉法行为的。","原处理决定被建议撤销或变更后，该申诉事项发回原处理部门予以撤销或变更，并重新作出处理决定。原处理部门不得以同一事实和理由作出与原决定相同或基本相同的处理，也不得加重对申诉人的处罚。","第二十条 申诉处理委员会将书面意见报校长办公会审批后产生效力，由申诉处理委员会办公室送达申诉人和相关部门。作出复查结论并告知申诉人一般应在接到书面申诉之日起15日内完成，情况复杂不能在规定限期内作出结论的，经学校负责人(校长)批准，可延长15日。","第二十一条在申诉期间，原处理决定不停止执行。","第二十二条 复议决定作出前，申请人要求撤回申诉申请的，经说明理由，可以撤回。申诉人撤回申诉申请的，申诉复议终止。","第二十三条 学生对复查决定有异议的，应当在接到学校复查决定书之日起10日内，向上级教育行政部门提出书面申诉。从处理决定或者复查决定送达之日起，学生在申诉期内未提出申诉的，学校或者上级教育行政部门不再受理其提出的申诉。","第六章 附 则","第二十四条本办法自2017年9月1日起施行。","第二十五条 本办法由校团委负责解释。","安徽大学学生心理咨询管理相关制度","学生的心理健康教育工作作为德育工作的一个重要组成部分，心理健康教育与咨询中心是为全校师生员工心理健康服务的机构，也是提升学生心理健康素质的重要基地。中心通过开展心理健康教育和心理咨询工作，全面提高大学生的社会适应能力、承受挫折能力和情绪调节与压力管理能力，促进大学生的健康人格发展。","心理健康教育与咨询中心总面积1500平方米，分室内室外两个场地，其中室内场地500平方米，2017年完成室内场地改造升级，建成了完整的办公+心理咨询区、团体辅导区和休闲区，包括接待室、咨询室、测量室、沙盘室、音乐放松室、团辅室、书吧和阳光花园等。室外场地主要提供户外素质拓展训练，面积1000平方米，建有梅花桩、齐心协力、电网、有轨电车、孤岛求生、胜利墙、盲目障碍、信任背摔、高空组合架、攀岩墙、罐头鞋等设备设施。","一、心理咨询预约制度","(一)预约方式","1、现场预约：磬苑校区：适之北楼(邮局)三楼，进行当面预约、龙河校区：207宿舍西平房","2、电话预约：磬苑校区：0551-63861590","3、预约时间：","周一至周五 上午8:30-12:00下午14:00-16:30","(二)预约须知","1、通过电话预约的同学，需告知准确联系方式。","2、心理中心按照来访者登记先后以及可接受咨询的时间等信息三个工作日内给予回复和安排。","3、来访者如需改变已经预约好的咨询时间，需提前与心理中心联系，如果在未取消预约时间的情况下迟到超过20分钟，则视为主动放弃，将取消本次咨询。","4、面对面心理咨询每次50分钟，咨询内容严格保密(保密","二、心理咨询须知","(一)来访者须知","1、我中心为安徽大学在校师生提供免费的心理咨询服务。","2、我中心除提供心理咨询服务以外，还开展心理健康教育、团体辅导、危机干预、心理测验、职业生涯规划辅导、心理健康教育宣传、心理健康讲座以及心理健康教育系列公共课程等工作。","3、为了保证心理咨询的效率与效果，每次心理咨询的标准时间是50分钟，通常不超过90分钟。","4、心理咨询内容：所有与来访者的心理情绪、行为有关的问题均是心理咨询的范畴。","5、心理咨询必须遵守保密原则(保密例外除外)。保密原则是心理咨询的首要原则。来访者需要真诚坦露自身情况，与咨询老师一起面对问题，寻求有效的解决方法，获得个人成长。","6、心理咨询必须遵守预约制度以及其他相关的规范。相关制度请参看“心理咨询的原则”等。","(二)来访者权利","1、来访者有权向心理健康教育中心了解心理咨询制度、资源等情况，可以对安排给自己的咨询师提出包括性别、年龄、阅历、专长等方面的要求，也可以指名。","2、来访者对本中心所安排的咨询师产生重大不满，咨询关系发生危机时，有权提请中心考虑重新安排适合自己的咨询师；当由于咨询关系不良而导致咨询中止时，来访者有权决定更换咨询师继续咨询，或者终止咨询。","3、来访者在咨询过程中，有权与咨询师商议选择咨询会谈交流的方式，采用面谈、网上咨询、在线交流、电话等组合方式；可以和咨询师进行充分沟通，了解咨询师对自己的诊断、咨询方法等情况。","4、来访者对自己的网上求助帖拥有隐私权，对已终结的来助帖有权决定是否公开。在没有获得来访者书面同意(也可通过知消息、电子邮箱等方式)之前，网站管理员、咨询师无权将其丝结帖转移至公开区域。在网上咨询过程中，如果来访者发现隐私权可能受侵害，可以向咨询师或中心申请采取强制保护措施(如提高阅读权限、暂时转移、中途删帖等)。","(三)来访者义务","1、来访者向心理中心求助属自愿行为，咨询过程中应自愿提供尽可能真实的求助信息，对于提供虚假或失真信息者，咨询师对该情况下的咨询结果及其它相应后果不负责任。","2、来访者要求心理咨询服务前应向中心了解相关规定。","3、来访者应允许咨询师把咨询过程中的相关谈话记录整理成文本档案形式予以存档。","4、来访者在咨询终结后，对于有广泛代表性的问题，有义务配合心理中心，在对来访者隐私进行保护的前提下进行宣传教育。","三、心理咨询保密原则","1、在心理咨询工作的开始，咨询师就应向来访者说明心理咨询工作的保密原则，以及这一原则在应用时的限度。这一原则同样适用于团体心理咨询。","2、只有在来访者同意的情况下才能对咨询过程进行录音、录像。在因专业需要进行案例讨论或进行教学、科研、写作等工作时，记录内容必须改动，以保障当事人不被识别出来。得到来访者书面许可的情况可不受此限制。","3、对咨询的记录、测验资料、信件、录音、录像和其它资料，均应作为专业资料予以保密，妥善进行保存，未经当事人许可，不得泄漏。","4、咨询师在工作中发现来访者有危害自身安全或危及他人安全的情况时，必须采取必要措施以防止意外事件的发生。","四、心理咨询转介制度","1、当咨询师由于工作安排改变等原因不能再继续完成个案时，应提前将个案转介给其他咨询师。","2、在咨询过程中，若发生了不利于咨询进行的因素，或咨询而感到自己无法完成咨询时，应及时将个案转介给其他咨询师。","3、个案转介时应向来访者说明转介原因，在来访者自愿的情况下进行转介。","4、个案转介时应详细填写《心理咨询个案转介登记表》，并与该个案的咨询记录一起转介给其他咨询师。","5、接受转介的咨询师应仔细了解个案情况并及时与来访者预约访谈。","6、当咨询师认为个案不属于咨询范围时应该及时转介给有关部门(医院或其他专业的心理治疗等机构)。","关于进一步加强学生心理健康教育工作的","实施意见","(校政(2012)1号)","各院、系、教学部，校直机关各部门，各直属、附属单位：","根据省教育厅《转发教育部关于印发普通高等学校学生心理教育工作基本建设标准(试行)的通知》(皖教秘思政(2011)35号)精神，为进一步推进我校学生心理健康教育工作，特制定本意见。","一、树立注重培养学生心理品质的工作理念","学生心理健康状况对其学习能力和思想政治素质的提高以及人生价值的实现，有着十分重要的作用。面对社会快速发展和高等教育改革不断深入以及学生个体成长需要发生变化的新情况，在关注学生心理危机预警干预的同时，心理健康教育工作的重点要及时转向培养学生良好的心理素质和自尊、自爱、自律、自强的优良品格，增强学生克服困难、经受考验、承受挫折的能力，促进学生成长成才。为此，在总结学校多年来开展心理健康教育工作的基础上，今后要更加注重于提高全体学生的心理素质，优化人格，增强全面发展的能力，实现工作理念从学生心理问题干预向心理品质培养的转变。","二、建立“课程教学-咨询辅导-教育宣传-科学研究”四位一体的工作模式围绕提高学生心理素质的目标，要逐步建立包括心理健康教育课程教学体系、个体心理咨询和团体辅导、心理健康教育宣传活动以及围绕学生心理健康教育工作开展调查研究等在内的“四位一体”的心理健康教育工作模式。","课程教学。开设《大学生心理健康》课程，整合教学师资、规范教学大纲、创新教学方法，切实增强学生自我认知能力，提高心理素质水平。同时，积极开设《大学生活适应能力训练》、《人《心理影片赏析》等一系列以指导学生个性际交往团体辅导》、成长和发展为主题的选修课程，积极采用案例教学、体验活动、行为训练等授课形式。","咨询辅导。实现心理咨询网络预约服务，面向全校学生提供心理支持和疏导。加强培训、研讨及督导，提高个体心理咨询的专业化水平。重点加强团体辅导建设，针对学生在个人成长和发展中遇到的各种问题，分层次分类别在不同学生群体中推广有关人际交往、情绪管理、压力管理、职业生涯规划、毕业感恩等主题的团体辅导，提升学生心理素质，增强学生适应能力。","教育宣传。继续做好“5·25”心理健康教育活动宣传月、启航工程、毕业生感恩教育等学校层面的心理健康教育系列活动，创新活动形式，丰富活动内容。指导心理社团等学生群体开展各种朋辈辅导活动，帮助学生在自助与互助中获得成长。加强心理健康教育网络平台建设和资源整合，探索设立网络在线课堂，向学生普及知识和提供辅导。","科学研究。每年根据UPI心理普测及约谈情况，统计新生心理健康状况指标的相关数据，并完成分析总结。运用积极心理学相关知识开展高校心理健康教育工作内容和方法的理论和实践探索。使用“自尊”、“主观幸福感”、“全人发展”等评估工具了解学生普遍心理素质水平，在此基础上分年级分阶段开展比较、跟踪研究，为学校制定相关政策提供决策依据。","三、完善“学校-院系-班级-宿舍”四级工作联动机制进一步健全大学生心理健康教育中心、院系心理健康教育辅导室、班级心理委员、宿舍心理信息员四级工作机制建设，在保障学生心理危机预警及干预工作及时有效实施的基础上，形成心理健康教育合力，营造培养学生良好心理品质的校园氛围。","学校层面。学校大学生心理健康教育工作指导委员会加强对全校心理健康教育工作的组织领导。心理健康教育与咨询中心在心理健康教育工作指导委员会的指导下，制定大学生心理健康教育规划及建设方案，建立健全各项规章制度，统筹部署全校学生心理健康教育工作。","院系层面。加强院(系)心理健康教育辅导室建设，改善工作条件，明确专人负责。在做好心理问题学生干预及跟踪的基础上，根据院系不同学科专业特点，向学生普及心理健康知识，开展多种形式的心理素质教育和咨询服务活动。","班级层面。强化心理委员工作职责，做好心理危机信息的汇报和跟踪，在院(系)心理健康教育辅导室指导下积极开展心理健康知识的宣传和学习。重点加强对心理委员的业务指导和培训。","宿舍层面。推进心理健康教育工作进宿舍。依托公寓学生工作办公室，组织专业人员开设心理工作坊，定期开展心理咨询和辅导。指导心理委员、心理社团、导生等在学生公寓区开展各种形式的心理健康教育活动。在学生宿舍设立心理信息员，关注学生心理状况，营造良好的宿舍氛围，协助开展心理健康教育宣传活动。","四、提升心理健康教育工作队伍的专业化水平学校在强化心理健康教育工作全员参与意识的同时，利用已有学科资源进行有效整合，进一步提升专职教师和学生工作队伍的心理健康教育工作水平。","加强专业师资的业务指导。学校心理健康教育中心加强与哲学系应用心理学专业、社会与政治学院社会工作专业等相关院(系)的业务联系与合作。聘请专业师资作为业务指导，定期组织开展有关学校心理健康教育工作的交流和研讨。鼓励专业师资参与学校心理健康教育工作的课程教学、科学研究以及心理咨询等工作。依托专业师资的学术资源，进一步提升学校心理健康教育工作的影响力。","推进专职教师的专业化建设。修订心理健康教育中心专职教学调位职责及工作量计算办法，将心理辅导和咨询活动纳入课的计算。保证专职教师每年接受不低于40学时的专业培训，或参加至少2次省级以上主管部门及二级以上心理专业学术团体召开的学术会议。适时安排从事心理咨询的教师接受专业督导。每年度学生工作课题研究基金专门设立心理健康教育研究专项。与相关院系在高校心理健康教育等相关领域组建学科梯队，形成研究合力。","提升学生辅导员的工作水平。将心理健康教育工作相关内容纳入学生辅导员岗位职责。加强对学生辅导员的心理健康知识和技能的业务培训，定期举行心理健康教育工作座谈会，分享工作案例、交流工作经验。支持学生辅导员参加国家心理咨询师职业资格认证。其中，院系心理健康教育辅导室负责人员必须具有国家心理咨询师职业资格，且每年至少参加1次省级以上专业培训。","五、保障心理健康教育的工作条件","学校按照师生比1：3000配备心理健康教育专职教师，适时引进高水平专业人才，充实专职师资队伍。以每年生均10元划拨心理健康教育工作经费，并纳入学校预算，确保日常工作需要。进一步完善“唐仲英大学生心理素质拓展中心”室内外场地设施建设，制订相关管理规定，发挥该项目在心理健康教育工作中的平台功能。土部门和各学院(系)要根据本部门、单位的工作职责和实际，认真贯彻本意见的各项内容。","安徽大学","2012年1月5日","心理健康科普","心理健康","心理健康是健康的重要组成部分，身心健康密切关联、相互影响。","一个健康的人，不仅在身体方面是健康的，在心理方面也是健康的。心理健康是人在成长和发展过程中，认知合理、情绪稳定、行为适当、人际和谐、适应变化的一种完好状态。","适量运动","适量运动有益于情绪健康，可预防、缓解焦虑抑郁。","运动是健康生活方式的核心内容之一，对于心理健康也有帮助和益处。","正视心理问题","出现心理问题积极求助，是负责任、有智慧的表现。","出现心理问题却不愿寻求专业帮助是常见而有害健康的表现。不愿求助者会产生以下错误认知：认为去见精神科医生或心理咨询师就代表自己有精神心理疾病；认为病情严重才有必要就诊等。对于这些想法，要及时纠正。","警示信号","睡不好，别忽视，可能是心身健康问题。","睡眠不良提示着存在心理问题或生理问题，是心身健康不可忽视的警示信号。","抑郁焦虑","抑郁焦虑可有效防治，需及早评估，积极治疗。","抑郁症、焦虑症可以通过药物治疗、心理治疗或者两者相结合而治愈。及时治疗有助于降低自杀风险，预防复发。","遵守医嘱","服用精神类药物需遵医嘱，不滥用，不自行减停。","药物治疗是针对许多心理疾病常用而有效的治疗方式之一。","精神类药物种类繁多，药物在用量、适用范围与禁忌、副作用等方面各有特点。精神类药物必须在精神科医生的指导下使用，不得自己任意使用。","理解心理疾病","要理解和关怀心理疾病患者，不歧视，不排斥。","人们对于精神心理疾病的恐惧和排斥很多是出于对疾病的不了解。实际上，精神心理疾病在得到有效治疗后，可以缓解乃至康复。","科学解压","用科学的方法缓解压力，不逃避，不消极。","判断什么是科学的减压方式，主要是看这种方式是否有利于更好应对现实问题，是否有利于长远的心身健康。","内容选自国家卫健委《心理健康素养十条》","安徽大学在校大学生参加城镇居民基本","医疗保险工作管理办法","(校政(2018)12号)","第一章 总 则","第一条 为切实保障我校在校大学生基本医疗需求，根据《国务院办公厅关于将大学生纳入城镇居民基本医疗保险试点范围的指导意见》(国办友[2008]119号)、《安徽省高等学校在校大学生参加城镇居民基本医疗保险实施意见(试行)》(教办[2008]6号)、《关于在校大学生参加城镇居民基本医疗保险有关问题的意见》(劳社[2009]1号)、《关于印发<在肥高等院校在校大学生参加城镇居民基本医疗保险实施细则>的通知》(合政办[2009]22号)、《关于提高在肥高校在校大学生基本医疗保险待遇有关问题的通知》(合人社[2011］201号)、《关于调整我市在肥高等院校在校大学生医疗保险相关待遇的通知》(合人社[2012]315号)、《关于开展城镇职工大病保险工作的意见》(合人社秘[2016]387号)和《关于在肥高校在校大学生实施大病保险办法的通知》(合人社秘[2016]458号)等文件精神，结合我校实际，制定本办法。","第二条 本办法适用于在校全日制本科生、专科生、非在职研究生(在职研究生不执行本办法)以及经学校批准休学的大学生(以下简称“大学生”)。","第三条 按照属地管理要求，我校在校大学生统一纳入合肥市城镇居民基本医疗保险制度体系，实行住院、门诊特殊病统筹与普通门诊统筹相结合的“双统筹”保障方式，医疗费用实行个人和政府补助相结合的分担机制。","第四条 大学生基本医疗保险工作由校医疗保障管理委员会领导，校医疗保障管理委员会办公室(以下简称校医保办)牵头，各院、系、所及相关部门指派专人负责，共同做好大学生参加城镇居民基本医疗保险工作。","(一)校医保办负责大学生医疗保险工作的组织、协调、实施、管理、监督和普通门诊管理、医疗待遇核定等工作。","(二)各院、系、所工作：","1、负责本院、系、所大学生相关医保政策的宣传、解释，负责动员、组织在校大学生参加城镇居民基本医疗保险。","2、负责为本院、系、所大学生办理参保登记、信息采集和缴费等。","3、负责大学生假期、实习期间因病在外地住院医疗费用报销所需材料的收集、汇总工作，并按规定时间报送校医保办。","4、负责建立本院、系、所参保大学生基本医疗保险信息档案、办理参保大学生的各项信息变更等工作。","(三)财务处负责参保大学生基本医疗保险费的代收、代缴，大学生医疗基金的监督和管理，财政承担资金的筹集，参保大学生普通门诊医疗费报销等工作。","(四)校医院负责大学生的校内医疗，医疗管理及普通门诊医疗费审核、报销等工作。","(五)学生处、研究生院作为学生工作主管部门，负责、督促各院、系、所做好大学生参加城镇居民基本医疗保险工作；配合医保办、财务处等部门做好大学生基本医疗保险工作。","第二章 基金筹集","第五条 在校大学生参加城镇居民基本医疗保险所需费用按下列标准筹集：","(一)大学生个人缴费标准按合肥市当年规定大学生缴费标准筹集。","(二)财政补助资金按照当年各级财政对参保大学生医疗保险的补助标准筹集。","ANHUI UN 医保工作","第三章参保和缴费","第六条 在校大学生以所在院、系、所为单位，办理参保登记手续。第七条 在校大学生应在每年规定时间内参加大学生医保，按年度一次性足额缴纳保费：财务处代收后，应在每年规定时间到主管地税部门缴纳保费。","大学生个人缴纳医疗保险费后，发生转学、退学或死亡等情形时，所缴纳的医疗保险费不予退费。","第四章参保大学生的权利、义务","第八条 参保大学生享有下列权利：","(一)享有本办法规定的在校大学生基本医疗保险待遇。","(二)享有在校大学生基本医疗保险的知情权、建议权和监督权。","第九条 参保大学生承担下列义务：","(一)及时、足额缴纳保费。","(二)遵守医疗保险有关规定和定点医院有关规章制度。","(三)配合定点医院治疗，按照规定结算医疗费用。","(四)遵守学校和校医院的有关规定及规章制度。","第五章保障待遇","第十条 大学生参保缴费后享受基本医疗保险待遇的结算年度按照合肥市规定的参保年度为准。一个结算年度内，住院和门诊特殊病的医疗费由合肥市基本医疗保险基金(以下简称市医保基金)支付，住院和门诊特殊病合计最高支付限额为每生每年30万元普通门诊医疗费由学校大学生普通门诊医疗统筹基本医疗保险基金(以下简称校学生医保基金)支付，合计支付最高限额以当年相关政策为准。","第十一条 大学生自办理入学手续并缴纳医疗保险费之日起享受基木医疗保险待遇。校医保办应及时将大学生参保信息传送给合肥市社会保险征缴中心，并录入合肥市大学生基本医疗保险管理系统，确保参保大学生及时享受基本医疗保险待遇。","第十二条大学生自办理离校及停保手续、并按学籍管理规定注销学籍之日起停止享受基本医疗保险待遇。","按照学籍管理规定已办理休学手续的大学生，在休学期间，所在院、系、所到校医保办为其办理参保手续并及时缴费的，可继续享受基本医疗保险待遇。","第十三条 大学生普通门诊医疗统筹基本医疗保险基金实行学校包干使用。普通门诊医疗统筹基本医疗保险基金由合肥市医疗保险经办机构(以下简称市医保办)按我校当年实际参保大学生人数，从筹集资金总额中按规定标准拨付我校，作为校学生医保基金使用。","第十四条 大学生参加城镇居民基本医疗保险后普通门诊、住院及门诊特殊病的支付范围，按照合肥市城镇职工基本医疗保险药品目录、诊疗项目目录、医疗服务设施范围和支付标准执行。使用乙类目录的药品以及属于基本医疗保险支付部分费用的诊疗项目所发生的费用，先由参保大学生自付一定的比例，余下部分再按基本医疗保险的规定支付。具体目录范围可登陆合肥劳动保障网查询(网址：www.ahhfld.gov.cn)。","第十五条 参保大学生因病在合肥市城镇居民定点医疗机构住院所发生的符合基本医疗保险范围的费用由个人和市医保基金按照下列规定共同承担：","(一)参保大学生在三级定点医院住院治疗的，其医疗费用在300元以下(含300元)部分由个人承担。超过300元以上部分，个人承担10%，基金承担90%。","(二)参保大学生在二级定点医院住院治疗的，其医疗费用在200元以下(含200元)部分由个人承担。超过200元以上部分，个人承担 8%，基金承担92%。","(三)参保大学生在一级定点医院及社区卫生服务中心住院治疗的，其医疗费用在100元以下(含100元)部分由个人承担。超过100元以上部分，个人承担6%，基金承担94%。","(四)转往异地住院、在异地急诊抢救住院、因实习和寒暑假或因病休学在异地住院，其住院费用在300元以下(含300元)部分由个人承担。超过300元以上部分，个人承担10%，基金承担90%。","第十六条 参保大学生门诊特殊病病种按照合肥市城镇职工基本医疗保险规定执行。门诊特殊病不设基金起付标准，在《合肥市城镇职工基本医疗保险门诊特殊病用药目录及诊疗项目》范围内的门诊特殊病医疗费用，个人承担10%，基金承担90%。","大学生参加城镇居民医疗保险待遇一览表","享受类别 享受待遇政策规定 报销结货","大学生普通门诊医疗统筹基","普通门诊包干使用。每生每年30元的标准拨付高校包干使用。","冠心病、高血压期、糖尿病、恶作解 结算","瘤、精神病、肾透析、肾移植术后，屏","硬化、帕金森病、类风湿关节炎、系统","性红斑狼疮、乳腺癌(内分泌治疗)","肝豆状核变性、慢性心力衰竭、慢性背","功能不全、癫痫、膀胱肿瘤（灌注治疗）大学生在秒特殊病甲状腺功能亢进、丙型肝炎、肝移植术期间住院和门诊 后、造血干细胞移植术后、前列腺癌(内门诊特殊病分泌治疗）、再生障碍性贫血、康复治治疗的费用，疗、慢性乙型肝炎等二十五种疾病可享属于个人应受特殊病门诊治疗。门诊特殊病不设起承担的费用付标准，在《合肥市城镇职工基本医疗 由大学生支保险门诊特殊病用药目录及诊疗项目》 付给定点医范围内的门诊特殊病医疗费用，个人承疗机构：属担10%，基金承担90%。 于基金承担起付标准（门槛费） 基金支付比例 的费用，由市医疗保险三级医院 300 元 90% 经办机构审核后及时支付给定点医住院 二级医院 200 元 92% 疗机构。","一级医院 100元 94%","异地住院 300 元 90%","第十七条一个参保年度内，住院个人自负属于支付范围内的合规医疗费用，累计超过城镇职工大病保险起付标准(2万元)部分，由城镇职工大病保险分类、按比例支付。","医保工作","(一)超过大病保险起付标准的符合“三个目录”规定医疗费用，由大病保险资金按50-80%比例支付。具体分段比例如下：支付范围内个人自付2万元以上分段 报销比例0～2万元（含) 509%2万元～10万元(含) 60%10万元～20万元(含) 70%20万元(不含)以上 80%","(二)超过大病保险起付标准的《药品目录》外的合规药品费用，由大病保险资金按50%比例支付。","第十八条 参保大学生因病在学校指定的定点医院(急诊除外)所发生的符合基本医疗保险范围内的普通门诊医疗费用(不设基金起付标准)，由个人和校学生医保基金按照规定共同承担。具体根据校学生医保基金管理使用情况按比例支付。","第十九条 参保大学生因违法犯罪、斗殴、酗酒、自残、自杀、交通事故、医疗事故，生育与计划生育，赴港、澳、台及国外期间等发生的住院及门诊医疗费用，医保基金不予支付。","第二十条 下列情况发生的普通门诊医疗费用校学生医保基金不予支付：","(一)擅自外出就医发生的医疗费用(急诊除外)。","(二)健康体检、免疫接种、健康(心理)咨询等公共卫生服务所发生的费用。","(三)生理缺陷的康复与治疗，如：腋臭、包皮过长、汗斑、医学美容等门诊医疗费用。","第六章 住院、门诊特殊病就医管理和费用结算","第二十一条 参保大学生因病需要住院治疗的，应持本入身份李感大尊证到合肥市大学生基本医疗保险定点医疗机构就医(合肥市大学生定点医疗机构名单见附件1)。","参保大学生不在医保定点医疗机构住院治疗的，或不持身份证住院的，所发生的医疗费用市医保基金不予支付。","第二十二条 参保大学生在校期间生病，要求转入父母所在地或家庭所在地医院住院治疗的，经合肥市医保定点医院首诊后，凭疾病诊断书、住院通知书在学校办理转诊、转院备案手续，方可去转入地住院，否则所发生的医疗费用市医保基金不予支付。","参保大学生在实习、寒暑假、法定节假日、休学等不在校期间因病需住院治疗的，应在当地的基本医疗保险定点医疗机构住院治疗，治疗结束返校后，在学校补办备案手续，否则所发生的医疗费用市医保基金不予支付。","办理异地转诊、转院需填写《在肥高校在校大学生转诊转院/异地就医备案单》（一式两份）（可从合肥劳动保障网下载，网址：www.ahhfld.gov.cn；或安徽大学医保办网站下载，网址：ybb.ahu.edu.cn)。","第二十三条 参保大学生在异地急诊抢救住院，应在当地的基本医疗保险定点医疗机构就医。否则，所发生的医疗费用市医保基金不予支付。","第二十四条 参保大学生患有合肥市城镇职工基本医疗保险规定的门诊特殊病种的(详见大学生参加城镇居民医疗保险待遇一览表)，由本人填写《合肥市基本医疗保险特殊病种门诊申请表》可从合肥劳动保障网下载，并附近期相关病历、三级医院(包括精神病专科医院)的医学检查报告和一张一寸照片到合肥市医疗保险经办机构申报鉴定。大学生门诊特殊病的鉴定按合肥市城镇职工基本医疗保险门诊特殊病鉴定办法执行。符合条件的由市医疗保险经办机构发给《合肥市大学生基本医疗保险门诊特殊病医疗卡》。大学生自取得《合肥市大学生基本医疗保险门诊特殊病医疗卡》后开始享受门诊特殊病待遇。","ARHUI UPHvEIm 医保工作","参保大学生在校期间，一个结算年度内可选择一家定点医疗机构作为门诊特殊病经治医院，凭门诊特殊病医疗卡和本人身谷证到所选的定点医院进行门诊治疗，否则所发生的医疗费用，市医保基金不予支付。","如需更换门诊特殊病定点医院，应在规定的时间内由个人提出书面申请交至合肥市医保中心办理变更手续。","第二十五条 参保大学生在肥住院和门诊特殊病治疗的费用，属于个人应承担的费用，由大学生支付给定点医疗机构；属于市医保基金承担的费用，由市医疗保险经办机构审核后及时支付给定点医疗机构。","第二十六条 参保大学生在异地住院(包括转往异地住院、异地急诊抢救住院，实习、寒暑假、休学等不在校期间因病在当地住院)，先由个人全额垫付住院医疗费用，出院后两个月内，将在肥高校在校大学生转诊转院/异地就医备案单(一式两份)、大学生零星报销申请表、异地住院费用明细清单、住院医疗费发票单据、出院小结或出院记录等相关材料交所在院、系、所，由院、系、所初审后交至校医保办，校医保办统一到市医疗保险经办机构办理结算。","第七章 普通门诊就医管理和费用结算","第二十七条 参保大学生普通门诊就医实行定点医院制度，在非学校指定的定点医院(急诊除外)门诊就医所发生的普通门诊医疗费用，校学生医保基金不予支付。","第二十八条 校医院为学校指定的参保大学生普通门诊医疗的首诊医院(急诊除外)。学校指定的校外普通门诊定点医院为：安徽医科大学第一、第二附属医院，安徽省立医院，安徽中医药大学第一附属医院，合肥市第一人民医院，合肥市第二人民医院，安徽省胸科医院，合肥市传染病院(合肥市第六人民医院)和合肥市第四人民医院。","第二十九条 参保大学生在校期间发生疾病时凭本人病历在校医院挂号、就诊、取药，个人全额支付医疗费用，后期在规定时间按有关规定予以报销。","第三十条 参保大学生因病情需要或因校医院诊疗条件限制，需转校外定点医院检查、治疗的，需经首诊医生提出书面转诊意见，并经校医院院长签字同意(急诊除外)，方可转市内学校指定的定点医院门诊就诊。急诊当日或次日由本人或委托他人到校医院补办相关手续。否则所发生的诊疗费用，校学生医保基金不予支付。","第三十一条 校外定点医院大型检查(CT、磁共振、中风预测、动态心电图、彩色多普勒超声心动图等)或单项检查费用在200元以上以及特殊治疗项目，在检查及治疗前需出具校外定点医院就诊医生意见，经校医院院长签字同意后，方可在校外学校定点医院进行诊治。否则所发生的诊疗费用，校学生医保基金不予支付。","对于校医院能够开展的检查和诊疗项目，应回校医院诊治。校外定点医院门诊用药一律凭医嘱回校医院取药。","第三十二条 因疑难疾病确需转外省市门诊就医者，需经省、市三级以上定点医院提出书面转诊意见，并经校医院院长批准，方可转往指定的一所异地省级以上公办基本医疗保险定点医院门诊就医，否则所发生的医疗费用，校学生医保基金不予支付。","第三十三条 参保大学生法定不在校期间(寒暑假和实习期间)发生急诊疾病，可就近在家庭居住地(限本省)或实习地县及县以上的城镇居民基本医疗保险定点医院就医，享受相应的急诊医疗保障待遇；否则所发生的异地急诊医疗费用，校学生医保基金不予支付。","第三十四条 参保大学生普通门诊就医所发生的医疗费用，由个人全额支付，凭门诊病历、医学检查报告、药品调配清单、发票单据等相关资料按规定时间到指定地点办理报销手续(具体办理详见安徽大学医院网站，网址：xyy.ahu.edu.cn)。","串镇大学","第八章学生医保基金管理","第三十五条 校学生医保基金实行收支两条线管理，专款专用，单独建账，独立核算，不得挤占、挪用。","第三十六条 建立健全校学生医保基金管理制度，加强基金收支管理，并随时接受审计、教育、财政、劳动和社会保障等行政主管部门的监督检查。","第九章校医院的管理和服务职能","第三十七条 校医院应加强内部管理，健全各类人员岗位责任制，不断改善服务态度，提高医疗服务质量。","第三十八条校医院要建立、完善大学生医疗服务管理制度，确定分管院长并配备专(兼)职人员负责大学生的医疗服务、管理工作。参照执行安徽省、合肥市的基本医疗保险有关规定，建立规章制度，严格执行疾病诊疗规范和本办法等有关规定，切实做好大学生的医疗服务工作。","第三十九条 大学生在校医院就诊时发生的各项医疗费用，校医院应按省物价部门规定的最低价格收费。","第四十条 校医院要严格执行用药原则。门诊每张处方不超过五种药，一般不超过3-5天用量，慢性病7-10天用量，最多不超过2-4周用量，用药情况应在病历上详实记录。禁止搭车看病、搭车开药、以物充药、弄虚作假等违规行为。违规行为一经发现，应给予严肃处理。","第四十一条 医务人员应坚持因病施治、合理检查、合理用药，实事求是地为大学生书写病历、处方等诊疗资料；应为大学生提供方便、快捷、热情的医疗服务，实行科学化管理，确保会诊、转诊、抢救等诊疗活动的及时性和规范化。","第十章 附则","第四十二条 本办法由校医疗保障管理委员会负责解释。","半兹大学","第四十三条 本办法自发布之日起实施，原《安徽大学在校大学生参加城镇居民基本医疗保险实施办法》(校政[2013]7号)即行废止。","第四十四条 本办法在实施中，若国家、省、市颁布新的政策、规定，则按新政策、新规定修订执行。","安徽大学学生服务热线","一、师生综合服务大厅咨询台：0551-63861400","财务处：0551-63861322；0551-65107303","研究生院：0551-63861455；0551-65107332","教务处：0551-63861477；0551-65107135","学生处（心理健康教育中心）：0551-63861686；0551-65107232","国际合作与交流处：0551-63861848","学校办公室：0551-63861659；0551-65107020","网络信息中心：0551-63861855；0551-65107282","保卫处：0551-63861918","人事处：0551-63861922","国有资产管理与实验室管理处：0551-63861949；0551-65107310","人文社会科学处：0551-63861958","科学技术处：0551-63861983","校团委：0551-65107537","二、相关职能部门","1、学生处（心理健康教育中心）","学生思想教育科：0551-63861900","学生管理科：0551-63861054","学生资助管理中心：0551-63861900","心理健康教育中心：0551-63861590","2、学生就业指导中心","电话：0551-63861355；63861383","3、校团委","团委办公室：0551-63861121；63861196","4、图书馆","电话：0551-63861109","5、校医院（医保办）","门/急诊电话：0551-65106120（龙河校区）；0551-63861120（磬苑校区）","校医疗保障委员会办公室：0551-63861715","6、后勤服务相关电话","学校物业监管办公室：0551-63861358","餐饮监管办公室电话：0551-63861398","7、报警电话","0551-63861110（磬苑校区）","0551-65108229（龙河校区）","学生承诺书","作者力竭了"],"tables":{"1167":{"caption":"推荐免试研究生素质评价项目一览表","head":["分类","加分条件","加分要求","分值"],"rows":[["科研成果","发表高水平学术论文","第一作者或独立作者","0.5-2"],["科研成果","获批国家发明专利","第一完成人","2"],["竞赛获奖","全国互联网＋大赛金奖、挑战杯／创青春大赛特等奖","第1-5位","≤7"],["竞赛获奖","全国互联网＋大赛银奖、挑战杯／创青春大赛一等奖","第1-5位","≤6"],["竞赛获奖","全国互联网＋大赛铜奖、挑战杯／创青春大赛二等奖","第1-5位","≤5"],["竞赛获奖","全国普通高校大学生竞赛排行榜其他竞赛项目、学科和技能竞赛国家级A类其他赛事特等奖","第1-5位","≤4"],["竞赛获奖","全国普通高校大学生竞赛排行榜其他竞赛项目、学科和技能竞赛国家级A类其他赛事一等奖（金奖）","第1-5位","≤3"],["竞赛获奖","全国普通高校大学生竞赛排行榜其他竞赛项目、学科和技能竞赛国家级A类其他赛事二等奖（银奖）","第1-5位","≤2"],["竞赛获奖","学科和技能竞赛国家级B类赛事特等奖","第1-5位","≤2"],["竞赛获奖","学科和技能竞赛国家级B类赛事一等奖（金奖）","第1-5位","≤1"],["竞赛获奖","学科和技能竞赛国家级B类赛事二等奖（银奖）","第1-5位","≤0.5"],["创新项目","国家级大学生创新创业训练计划项目","优秀结题第1-5位","≤1"],["创新项目","国家级大学生创新创业训练计划项目","合格结题第1-5位","≤0.5"],["社会实践","国际组织实习","三个月及以上","≤2"],["社会实践","志愿活动","累计100小时及以上","0.1"]]}},"docs":[[0,"安徽大学简介"],[8,"安徽大学校名"],[12,"安徽大学校训"],[13,"安徽大学校歌"],[17,"高等学校学生行为准则"],[27,"安徽大学学生管理办法(修订)"],[109,"安徽大学学生宿舍管理规定"],[131,"安徽大学学生宿舍空调设备使用和管理办法(试行)"],[159,"安徽大学学生宿舍空调使用文明公约"],[170,"安徽大学本科学生校外住宿管理规定"],[213,"安徽大学本科学生学籍管理规定(修订)"],[383,"安徽大学免修、免听课程实施细则"],[393,"安徽大学本科课程考核管理办法"],[495,"安徽大学学生诚信考试承诺书"],[503,"安徽大学学位授予工作实施细则(修订)"],[505,"安徽大学学士学位授予工作实施细则(修订)"],[570,"安徽大学本科生辅修第二专业实施细则"],[591,"安徽大学学生海外交流学习管理办法"],[661,"安徽大学联合培养类本科学生管理暂行办法"],[673,"安徽大学本专科生延期毕业管理办法"],[701,"安徽大学本硕博一体化贯通培养试点实施办法"],[722,"安徽大学微专业管理办法(试行)"],[742,"安徽大学本科学生学年考核办法"],[772,"安徽大学本科学生奖学金评选办法(修订)"],[815,"安徽大学本科生国家奖学金管理实施细则(修订)"],[845,"安徽大学本科生国家励志奖学金管理实施细则(修订)"],[869,"安徽大学服兵役学生国家教育资助实施细则"],[896,"安徽大学三好学生、优秀学生干部和先进班集体评选与表彰暂行办法(修订)"],[932,"安徽大学优秀毕业生评选和表彰办法"],[964,"安徽大学本专科学生资助管理办法(修订)"],[1005,"安徽大学家庭经济困难学生认定工作实施办法"],[1054,"安徽大学本科生国家助学金管理实施细则(修订)"],[1077,"安徽大学本专科学生减免学费实施细则(修订)"],[1094,"安徽大学本专科学生临时困难补助实施细则(修订)"],[1107,"安徽大学勤工助学管理办法"],[1166,"安徽大学推荐优秀应届本科毕业生免试攻读研究生工作实施办法"],[1173,"安徽大学团员教育评议、团籍注册和团内评优实施办法(修订)"],[1245,"安徽大学学生会章程"],[1303,"中国共产主义青年团纪律处分条例(试行)"],[1436,"中国共产主义青年团纪律处分工作规则(试行)"],[1505,"国家教育考试违规处理办法(节选)"],[1587,"安徽大学本科学生考试违规行为认定办法"],[1621,"安徽大学学生违纪处分实施细则(修订)"],[1701,"安徽大学学生申诉处理办法"],[1762,"安徽大学学生心理咨询管理相关制度"],[1806,"关于进一步加强学生心理健康教育工作的实施意见"],[1831,"心理健康科普"],[1858,"安徽大学在校大学生基本医疗保险工作管理办法(修订)"],[1965,"安徽大学学生服务热线"],[2001,"学生承诺书"]],"chapters":[[29,"第一章总 则"],[36,"第二章 学生的权利与义务"],[52,"第三章学生团体和课外活动"],[60,"第四章校园秩序"],[70,"第五章 奖励与资助"],[76,"第六章学生处理与申诉"],[105,"第七章 附 则"],[133,"第一章 总则"],[137,"第二章管理与维护"],[143,"第三章 收费管理"],[146,"第四章 使用管理"],[154,"第五章附则"],[172,"第一章 总则"],[178,"第二章申请条件和程序"],[196,"第三章 校外住宿学生的责任义务"],[202,"第四章 教育管理"],[209,"第五章附则"],[215,"第一章 总则"],[219,"第二章 管理制度与学习年限"],[228,"第三章 入学与注册"],[251,"第四章 选课与考勤"],[257,"第五章 考核与成绩记载"],[279,"第六章重修、辅修、免听与免修"],[295,"第七章转专业与转学"],[321,"第八章休学与复学"],[336,"第九章 学业预警与退学"],[354,"第十章毕业与学位授予、提前与延期、结业与肄业"],[377,"第十一章 附则"],[395,"第一章 总则"],[398,"第二章组织管理"],[401,"第三章 考核方式"],[405,"第四章 命题与制卷"],[414,"第五章考核安排"],[428,"第六章 监考与巡考"],[455,"第七章缓考"],[464,"第八章 考核纪律"],[475,"第九章 评卷与成绩"],[485,"第十章 试卷装订与入库"],[491,"第十一章 附 则"],[505,"第一章 总则"],[510,"第二章 组织机构"],[514,"第三章 授予标准"],[528,"第四章申请、评定与授予程序"],[532,"第三章授予标准"],[545,"第四章申请、评定与授予程序"],[556,"第五章其他情况的处理"],[566,"第六章 附则"],[572,"第一章 总则"],[576,"第二章辅修条件"],[580,"第三章辅修教学及成绩管理"],[585,"第四章 辅修证明和学位授予"],[587,"第五章附则"],[593,"第一章 总则"],[600,"第二章 申请、选拔和派出"],[627,"第三章 海外学习管理"],[634,"第六章 其它"],[637,"第四章 成绩认定"],[654,"第五章 有关费用"],[658,"第六章 其它"],[675,"第一章 总则"],[678,"第二章 学习及日常管理"],[689,"第三章 结业处理"],[697,"第四章附则"],[703,"第一章 总则"],[705,"第二章 学科专业"],[708,"第三章 贯通培养模式"],[714,"第四章 学生管理"],[719,"第五章 附则"],[724,"第一章 总则"],[729,"第二章 组织管理与课程设置"],[733,"第三章 修读要求"],[737,"第四章 证书发放"],[740,"第五章 附则"],[965,"第一章 总则"],[970,"第二章组织机构"],[973,"第三章 资助管理"],[982,"第四章 资金来源"],[987,"第五章 资助项目"],[1000,"第六章 执行与监督"],[1006,"第一章 总则"],[1015,"第二章 组织管理"],[1019,"第三章认定依据和等级划分"],[1037,"第四章认定程序及日常管理"],[1046,"第五章 相关责任"],[1051,"第六章 附则"],[1109,"第一章 总则"],[1115,"第二章 组织机构"],[1120,"第三章 学校职责"],[1125,"第四章学生勤工助学服务中心职责"],[1133,"第五章 校内勤工助学岗位设置与管理"],[1148,"第六章校外勤工助学活动管理"],[1152,"第七章勤工助学酬金标准及支付"],[1158,"第八章法律责任"],[1163,"第九章附则"],[1247,"第一章 总 则"],[1258,"第二章 会 员"],[1268,"第三章 组织和职能"],[1299,"第四章附 则"],[1307,"第一章　总　则"],[1318,"第二章　违纪与纪律处分"],[1341,"第三章　团纪处分运用规则"],[1382,"第四章 对违反纪律行为的处分"],[1418,"第五章　对违法犯罪团员的团纪处分"],[1431,"第六章　附　则"],[1440,"第一章　总　则"],[1444,"第二章　处分的一般性原则"],[1449,"第三章　处分批（核）准权限"],[1463,"第四章　受理及审查"],[1485,"第五章　处分作出及审批"],[1494,"第六章　处分宣布、记录及备案"],[1500,"第七章　附　则"],[1507,"第二章 违规行为的认定与处理"],[1623,"第一章 总则"],[1629,"第二章 违纪行为与处分"],[1675,"第三章 处分程序"],[1685,"第四章 学生申诉"],[1687,"第五章 处分解除"],[1694,"第六章附则"],[1703,"第一章 总 则"],[1707,"第二章 处理申诉的组织"],[1716,"第三章 申诉的受理"],[1733,"第四章 申诉的复议程序"],[1746,"第五章 申诉复议决定"],[1759,"第六章 附 则"],[1861,"第一章 总 则"],[1875,"第二章 基金筹集"],[1880,"第三章参保和缴费"],[1883,"第四章参保大学生的权利、义务"],[1892,"第五章保障待遇"],[1927,"第六章 住院、门诊特殊病就医管理和费用结算"],[1940,"第七章 普通门诊就医管理和费用结算"],[1951,"第八章学生医保基金管理"],[1954,"第九章校医院的管理和服务职能"],[1960,"第十章 附则"]],"articles":[[30,"第一条"],[31,"第二条"],[32,"第三条"],[33,"第四条"],[34,"第五条学生应当增强法治观念，遵守宪法、法律、法规"],[35,"第六条学校尊重和保护学生的合法权利，教育和引导学"],[37,"第七条"],[45,"第八条学生在校期间依法履行下列义务："],[53,"第九条"],[55,"第十条"],[56,"第十一条"],[58,"第十二条"],[61,"第十三条"],[62,"第十四条学校推行校务公开，支持和保障学生依法、依"],[64,"第十六条"],[66,"第十七条"],[67,"第十八条"],[68,"第十九条"],[69,"第二十条"],[71,"第二十一条"],[72,"第二十二条"],[73,"第二十三条学校对家庭经济困难的学生实施经济资助，"],[75,"第二十四条学校对学生予以表彰和奖励，以及确定推荐"],[77,"第二十五条"],[78,"第二十六条"],[84,"第二十七条"],[93,"第二十八条"],[94,"第二十九条"],[95,"第三十条学校对学生作出处理，一律出具处理决定书。"],[96,"第三十一条"],[97,"第三十二条"],[98,"第三十三条"],[100,"第三十四条学生对复查决定有异议的，应当在接到学校"],[101,"第三十五条"],[103,"第三十六条"],[104,"第三十七条"],[106,"第三十八条"],[107,"第三十九条对在我校接受高等教育的其他各类学生的管"],[108,"第四十条"],[134,"第一条"],[135,"第二条本办法适用范围，包括各校区所有安装空调的学"],[136,"第三条"],[138,"第四条"],[139,"第五条"],[140,"第六条"],[141,"第七条"],[142,"第八条"],[144,"第九条"],[145,"第十一条"],[147,"第十二条"],[148,"第十三条"],[149,"第十四条"],[150,"第十五条"],[151,"第十六条严禁在空调电源线上栓接绳索或晾晒物品，严"],[152,"第十七条"],[153,"第十八条"],[155,"第十九条"],[156,"第二十条"],[157,"第二十一条"],[158,"第二十二条本办法自学校印发之日起试行。"],[173,"第一条"],[174,"第二条"],[175,"第三条"],[176,"第四条"],[177,"第五条"],[179,"第六条"],[182,"第七条"],[190,"第八条"],[197,"第九条遵守国家法律法规、校纪校规和社会公德，服从"],[198,"第十条"],[199,"第十一条"],[200,"第十二条"],[201,"第十三条"],[203,"第十四条"],[205,"第十五条"],[206,"第十六条"],[207,"第十七条"],[208,"第十八条"],[210,"第十九条"],[211,"第二十条学校对接受专科学历教育类型学生的校外住宿"],[212,"第二十一条"],[216,"第一条"],[217,"第二条"],[218,"第三条"],[220,"第四条"],[221,"第五条"],[229,"第六条"],[230,"第七条"],[239,"第八条复查中发现学生身心状况不适宜在校学习，经学"],[240,"第九条"],[245,"第十一条"],[250,"第十二条"],[252,"第十三条"],[253,"第十四条"],[254,"第十五条"],[255,"第十六条"],[256,"第十七条"],[258,"第十八条"],[259,"第十九条"],[260,"第二十条"],[261,"第二十一条"],[262,"第二十二条学生思想品德的考核、鉴定须以《普通高等"],[263,"第二十三条"],[264,"第二十四条"],[265,"第二十五条"],[275,"第二十六条平均学分绩点GPA(Grade"],[277,"第二十七条"],[278,"第二十八条学生参加创新创业、社会实践等活动以及发"],[280,"第二十九条"],[284,"第三十条"],[289,"第三十一条"],[296,"第三十二条"],[300,"第三十三条"],[309,"第三十四条"],[310,"第三十五条"],[317,"第三十六条"],[322,"第三十七条"],[328,"第三十八条"],[333,"第三十九条学生休学期满，须在次学年开学前(选课结"],[334,"第四十条"],[335,"第四十一条"],[337,"第四十二条"],[338,"第四十三条"],[339,"第四十四条"],[340,"第四十五条学生有下列情形之一，予以退学："],[348,"第四十六条"],[353,"第四十七条取消入学资格、取消学籍、已退学的学生不"],[355,"第四十八条"],[356,"第四十九条"],[357,"第五十条"],[358,"第五十一条"],[362,"第五十二条"],[366,"第五十三条"],[371,"第五十四条"],[372,"第五十五条学生入学后，修满本专业毕业所需总学分7"],[373,"第五十六条"],[374,"第五十七条"],[375,"第五十八条"],[376,"第五十九条学历证书和学位证书遗失或者损坏，经本人"],[378,"第六十条"],[379,"第六十一条"],[380,"第六十二条"],[381,"第六十三条"],[382,"第六十四条"],[396,"第一条"],[397,"第二条"],[399,"第三条"],[400,"第四条"],[402,"第五条"],[407,"第七条"],[408,"第八条"],[409,"第九条"],[410,"第十条"],[411,"第十一条"],[412,"第十二条"],[415,"第十三条学习过程考核由授课教师根据课程特点选择适"],[416,"第十四条"],[424,"第十五条"],[426,"第十六条"],[427,"第十七条"],[429,"第十八条"],[430,"第十九条"],[431,"第二十条"],[448,"第二十一条实行以课程考核工作领导小组、督导组、学"],[456,"第二十二条"],[458,"第二十三条"],[462,"第二十四条"],[463,"第二十五条"],[465,"第二十六条"],[466,"第二十七条参加闭卷考试的学生，除必要的文具之外，"],[467,"第二十八条"],[468,"第二十九条学生进入考场后，必须按监考人员要求在《"],[469,"第三十条答卷之前，先将试卷和各题纸上的处名、学g"],[470,"第三十一条课程开始考试30分钟之内，考试结束面5"],[471,"第三十二条"],[472,"第三十三条"],[474,"第三十五条"],[476,"第三十六条"],[477,"第三十七条"],[479,"第三十八条"],[481,"第三十九条"],[482,"第四十条"],[483,"第四十一条"],[484,"第四十二条"],[486,"第四十三条"],[487,"第四十四条"],[488,"第四十五条"],[489,"第四十六条"],[490,"第四十七条"],[492,"第四十八条补考参照本办法及《安徽大学本科学生学籍"],[493,"第四十九条"],[494,"第五十条"],[506,"第一条为进一步规范学校学士学位授子工作。根据(h"],[507,"第二条"],[508,"第三条学士学位授予工作，遵循公开、公正、公平的原"],[509,"第四条"],[511,"第五条校学位(评定)委员会是全校学位工作的领导机"],[512,"第六条"],[513,"第七条"],[515,"第八条"],[516,"第九条"],[521,"第十条"],[529,"第十一条学士学位资格审查按下列程序进行："],[533,"第八条学校按照国务院学位委员会、安徽省人民政府学"],[534,"第九条"],[538,"第十条"],[546,"第十一条"],[553,"第十二条校学位(评定)委员会经审定作出不授予学士"],[554,"第十三条"],[555,"第十四条"],[557,"第十五条凡属下列情况之一者，均予以撤销学士学位并"],[561,"第十六条撤销学士学位的决定由学校学位（评定）委员"],[562,"第十七条"],[565,"第十八条"],[567,"第十九条本细则由校学位(评定)委员会授权教务处负"],[568,"第二十条本细则自颁布之日起施行。原《安徽大学普通"],[573,"第一条为进一步深化教育教学改革，发挥综合性大学的"],[574,"第二条"],[575,"第三条"],[577,"第四条院(系)申办辅修第二专业的须按要求申报，应"],[578,"第五条学生申请辅修第二专业的须是在校全日制本科生"],[579,"第六条"],[581,"第七条辅修第二专业一般在标准学习年限的大二下至大"],[582,"第八条"],[583,"第九条"],[584,"第十条"],[586,"第十三条学生修满主修专业课程学分、辅修第二专业课"],[588,"第十五条辅修第二专业教学属于主修专业以外教学工作"],[589,"第十六条"],[590,"第十七条本细则自颁布之日起施行，原《安徽大学本科"],[595,"第一条"],[596,"第二条"],[597,"第三条"],[598,"第四条"],[599,"第五条"],[602,"第六条"],[604,"第七条"],[611,"第八条"],[618,"第九条"],[625,"第十条"],[628,"第十一条"],[629,"第十二条"],[630,"第十三条"],[631,"第十四条"],[632,"第十五条交流学生因不可抗拒因素不能在海外完成学习"],[635,"第二十五条交流学生返校后，应于两周内向所在院(系"],[636,"第二十六条本办法自公布之日起施行，由国际合作与处"],[639,"第十七条"],[641,"第十八条"],[642,"第十九条"],[643,"第二十条"],[652,"第二十一条"],[655,"第二十二条"],[656,"第二十三条"],[657,"第二十四条"],[659,"第二十五条"],[660,"第二十六条"],[662,"第一条为促进联合办学有序发展，进一步规范我校联合"],[663,"第三条"],[664,"第四条"],[665,"第五条"],[666,"第六条"],[667,"第七条"],[668,"第八条"],[669,"第九条"],[670,"第十条"],[671,"第十一条"],[672,"第十二条"],[676,"第一条"],[677,"第二条"],[679,"第三条"],[680,"第四条"],[683,"第五条"],[685,"第六条延用半业学生应当按规定履行报到注册等手练，"],[686,"第七条"],[687,"第八条"],[688,"第九条"],[690,"第十条"],[698,"第十二条"],[700,"第十三条本办法自公布之日起执行。"],[704,"第一条"],[706,"第二条"],[707,"第三条"],[709,"第四条"],[712,"第五条"],[713,"第六条"],[715,"第七条"],[716,"第八条"],[717,"第九条"],[718,"第十条"],[720,"第十一条"],[721,"第十二条"],[725,"第一条"],[726,"第二条"],[727,"第三条"],[728,"第四条"],[730,"第五条"],[731,"第六条"],[732,"第七条"],[734,"第八条"],[735,"第九条"],[736,"第十条"],[738,"第十一条"],[739,"第十二条"],[741,"第十三条"],[744,"第一条"],[745,"第二条"],[756,"第三条"],[760,"第四条"],[768,"第五条"],[770,"第六条"],[771,"第七条"],[774,"第一条为实出立语树人理念，鼓励学生的奋学习，积极"],[775,"第三条"],[776,"第三条"],[781,"第四条"],[783,"第五条"],[787,"第六条"],[791,"第七条"],[795,"第八条"],[798,"第九条"],[801,"第十条"],[804,"第十一条"],[811,"第十二条"],[814,"第十三条"],[815,"第十四条"],[817,"第一条为进一步规范我校本专科生国家奖学金管理工作"],[818,"第二条"],[819,"第三条"],[820,"第四条"],[834,"第五条"],[840,"第六条"],[843,"第七条"],[844,"第八条"],[847,"第一条"],[848,"第二条"],[849,"第三条"],[850,"第四条"],[857,"第五条"],[864,"第六条"],[867,"第七条"],[868,"第八条"],[871,"第一条　为推进国防和军队现代化建设，规范我校应征"],[872,"第二条　服兵役学生国家教育资助对象为我校全日制普"],[873,"第三条　应征入伍服兵役学生国家教育资助主要包括学"],[874,"第四条　学费补偿或国家助学贷款代偿金额，按学生实"],[876,"第五条　下列学生不享受以上国家资助："],[880,"第六条　获学费补偿学生在校期间获得国家助学贷款的"],[881,"第七条　获得国家助学贷款的在校生应征入伍后，国家"],[882,"第八条　学费补偿、贷款代偿或学费减免资助期限为全"],[884,"第九条　学费补偿或国家助学贷款代偿应遵循以下程序"],[890,"第十条　退役后自愿回校复学或入学的学生和退役后考"],[891,"第十一条　入伍资助资金不足以偿还国家助学贷款的，"],[892,"第十二条　应征入伍服兵役的往届毕业生，申请国家助"],[893,"第十三条　因故意隐瞒病史或弄虚作假、违法犯罪等行"],[894,"第十四条　本细则由学生处（党委学生工作部、心理健"],[895,"第十五条　本细则自印发之日起施行，原《安徽大学服"],[899,"第一条为展示学生奋发向上的精神风貌，树立先进典型"],[900,"第二条三好学生、优秀学生干部和先进班集体在入学满"],[901,"第三条"],[902,"第四条"],[918,"第五条"],[925,"第六条"],[930,"第七条本办法适用于我校普通教育本科学生。"],[931,"第八条"],[933,"第一条为深入贯相习近平部时代中国特色社会主义思想"],[934,"第二条"],[935,"第三条"],[949,"第四条"],[956,"第五条"],[961,"第六条对优秀毕业生评选工作结束后至毕业生离校前出"],[962,"第七条"],[963,"第八条"],[966,"第一条为部助家庭经济积乘学生断相完故警出。金面破"],[968,"第二条"],[969,"第三条"],[971,"第四条"],[972,"第五条"],[974,"第六条"],[978,"第七条"],[980,"第八条"],[981,"第九条"],[983,"第十条"],[988,"第十一条学校执行国家政策并结合自身实际情况，改章"],[1001,"第十二条"],[1002,"第十三条"],[1003,"第十四条"],[1004,"第十五条"],[1007,"第一条为进一步健全学生资动制度，提高学生负动情确"],[1008,"第二条"],[1009,"第三条"],[1010,"第四条"],[1016,"第五条"],[1018,"第七条"],[1020,"第八条"],[1026,"第九条"],[1027,"第十条"],[1038,"第十一条"],[1045,"第十二条"],[1047,"第十三条学校要高度重视家庭经济困难学生认定工作，"],[1048,"第十四条"],[1049,"第十五条"],[1050,"第十六条"],[1052,"第十七条"],[1053,"第十八条"],[1056,"第一条为进一步规范我校本专科生国家助学金管理工作"],[1057,"第二条"],[1058,"第三条"],[1059,"第四条"],[1066,"第五条"],[1072,"第六条"],[1075,"第七条"],[1076,"第八条本细则自印发之日起施行。原《安徽大学国家助"],[1078,"第一条为帮助家庭经济特别困难的学生顺利完成学业，"],[1079,"第二条"],[1080,"第三条"],[1081,"第四条"],[1086,"第五条"],[1087,"第六条"],[1092,"第七条"],[1093,"第八条"],[1096,"第一条"],[1097,"第二条"],[1098,"第三条申请范围：学生因供养人发生重大疾病或突然亡"],[1099,"第四条"],[1102,"第五条"],[1105,"第六条"],[1106,"第七条"],[1110,"第一条"],[1111,"第二条本办法所称学生是指学校招收的全日制本专科学"],[1112,"第三条"],[1113,"第四条"],[1114,"第五条"],[1116,"第六条学校学生资助工作领导小组全面领导勤工助学工"],[1117,"第七条"],[1118,"第八条"],[1121,"第九条"],[1122,"第十条"],[1123,"第十一条"],[1124,"第十二条"],[1126,"第十三条确定校内勤工助学岗位。与人事处等部门受理"],[1127,"第十四条"],[1128,"第十五条"],[1129,"第十六条"],[1131,"第十八条"],[1132,"第十九条"],[1134,"第二十条"],[1137,"第二十一条"],[1141,"第二十二条"],[1144,"第二十三条"],[1146,"第二十四条"],[1149,"第二十五条"],[1150,"第二十六条"],[1151,"第二十七条"],[1153,"第二十八条"],[1154,"第二十九条"],[1155,"第三十条"],[1156,"第三十一条"],[1157,"第三十二条"],[1159,"第三十三条"],[1160,"第三十四条"],[1161,"第三十五条"],[1162,"第三十六条"],[1164,"第三十七条"],[1165,"第三十八条"],[1175,"第一条"],[1176,"第二条"],[1181,"第三条"],[1195,"第四条"],[1196,"第五条"],[1198,"第六条"],[1199,"第七条"],[1229,"第九条"],[1230,"第十条"],[1234,"第十一条"],[1239,"第十二条"],[1244,"第十三条"],[1248,"第一条安徽大学学生会是在省学联的指导管理、校党委"],[1249,"第二条"],[1257,"第三条安徽大学学生会遵守中华全国学联章程和安徽省"],[1259,"第四条"],[1260,"第五条"],[1264,"第六条"],[1269,"第七条"],[1270,"第八条"],[1276,"第九条"],[1280,"第十条"],[1281,"第十一条校学生会主席团行使的职权"],[1286,"第十二条"],[1287,"第十三条"],[1290,"第十五条"],[1292,"第十六条"],[1293,"第十七条"],[1295,"第十八条"],[1300,"第十九条"],[1301,"第二十条"],[1302,"第二十一条"],[1308,"第一条　为了维护团章和其他团内规章，严肃团的纪律"],[1309,"第二条　团的纪律建设必须坚持党的领导，坚持以马克"],[1310,"第三条　团章是管团治团的总规矩。团的纪律是团的各"],[1311,"第四条　团的纪律处分工作遵循下列原则："],[1317,"第五条　本条例适用于违犯团纪应当受到团纪责任追究"],[1319,"第六条　团组织和团员违反团章和其他团内规章，违反"],[1320,"第七条　对团员的纪律处分种类："],[1327,"第八条　对于违犯团纪的团组织，上级团组织应当责令"],[1330,"第九条　团员受到警告处分六个月内、受到严重警告处"],[1331,"第十条　撤销团内职务处分，是指撤销受处分团员由团"],[1335,"第十一条　留团察看的时间为六个月或者一年。对于受"],[1338,"第十二条　团员受到开除团籍处分，原则上不得重新入"],[1339,"第十三条　团的各级代表大会的代表受到留团察看以上"],[1340,"第十四条　团员受到团纪处分，当年教育评议等次不得"],[1342,"第十五条　有下列情形之一的，可以从轻或者减轻处分"],[1350,"第十六条　对于团员违犯团纪应当给予警告或者严重警"],[1353,"第十七条　对违犯团纪情节本应适用警告处分，但初次"],[1354,"第十八条　有下列情形之一的，应当从重或者加重处分"],[1361,"第十九条　团员在团纪处分影响期内又受到团纪处分的"],[1362,"第二十条　从轻处分，是指在本条例规定的违纪行为应"],[1367,"第二十一条　一人有本条例规定的两种以上应当受到团"],[1370,"第二十二条　违纪行为有关责任人员的区分："],[1375,"第二十三条　对团员的纪律处分，一般应当经支部大会"],[1376,"第二十四条　支部大会在讨论决定对团员的处分时，除"],[1377,"第二十五条　对于违纪行为所获得的不当利益，应当按"],[1378,"第二十六条　团纪处分决定作出后，应当在一个月内向"],[1379,"第二十七条　受到团纪处分的，应当在其团员档案中予"],[1380,"第二十八条　对违犯团纪的受理、核实、审查、情节认"],[1381,"第二十九条　团员因违犯团纪受到处分，影响期满后，"],[1383,"第三十条"],[1384,"第三十一条"],[1390,"第三十二条"],[1393,"第三十三条"],[1395,"第三十四条"],[1398,"第三十五条"],[1399,"第三十六条　违反民主集中制原则，拒不执行、擅自改"],[1400,"第三十七条　在党组织、团组织纪律审查中，依法依规"],[1401,"第三十八条　侵犯团员的表决权、选举权、被选举权或"],[1402,"第三十九条　利用信息网络造谣传谣、污蔑诽谤或者实"],[1403,"第四十条　违背社会公序良俗，违反社会公德、职业道"],[1404,"第四十一条　漠视、脱离青年，其言行损害团组织形象"],[1405,"第四十二条　利用团员发展、团组织推荐优秀团员作为"],[1406,"第四十三条　在团费收缴、使用和管理过程中，存在违"],[1407,"第四十四条　擅自举办评比达标表彰、创建示范活动或"],[1408,"第四十五条　采取弄虚作假或者其他手段把不符合团员"],[1410,"第四十六条　对团属报刊、网站、新媒体平台等宣传舆"],[1411,"第四十七条　工作中不敢斗争、不愿担当，面对重大矛"],[1412,"第四十八条　团组织不对团员进行教育管理，不落实“"],[1413,"第四十九条　团组织在团内统计等工作中弄虚作假，造"],[1414,"第五十条　下级团组织拒不执行或者擅自改变上级团组"],[1415,"第五十一条　不履行全面从严管团治团主体责任或者履"],[1416,"第五十二条　生活奢靡、铺张浪费、贪图享乐、追求低"],[1417,"第五十三条　有其他违反纪律规定行为的，应当视具体"],[1419,"第五十四条　对违法犯罪的团员，应当按照规定给予团"],[1420,"第五十五条　团员被依法留置、逮捕的，应当中止其表"],[1421,"第五十六条　团员犯罪情节轻微，人民检察院依法作出"],[1423,"第五十七条　团员犯罪，有下列情形之一的，应当给予"],[1428,"第五十八条　团员依法受到刑事责任追究的，团组织应"],[1432,"第五十九条　中央军委政治工作部可根据本条例，制定"],[1433,"第六十条　本条例由共青团中央组织部负责解释。"],[1434,"第六十一条　本条例自2025年1月1日起施行。"],[1441,"第一条　为了规范各级团组织执纪工作，推进全面从严"],[1442,"第二条　团纪处分应当坚持党的领导，坚持团纪面前一"],[1443,"第三条　本规则适用于开展团纪处分的有关工作。"],[1445,"第四条　分级负责。处分违纪团员、团组织的工作权限"],[1446,"第五条　依规回避。工作人员是被审查人或者检举人近"],[1447,"第六条　严格保密。工作人员应当控制相关工作知悉范"],[1448,"第七条　规范有序。团纪处分应当严格按照规定主体、"],[1450,"第八条　对团员的团纪处分，一般应当经支部大会讨论"],[1454,"第九条　县级以上团的委员会全体会议可以给予本级委"],[1457,"第十条　给予担任两个以上团内职务的违纪团员团纪处"],[1458,"第十一条　对团员所作处分需要变更、撤销的，或者涉"],[1459,"第十二条　对违纪团员免予团纪处分的，按照给予其警"],[1461,"第十三条　对于应当受到撤销团内职务处分，职务由党"],[1462,"第十四条　给予组织关系转出但尚未被接收的团员团纪"],[1464,"第十五条　各级团组织发现或者收到团员违纪相关线索"],[1468,"第十六条　初步核实工作应当由两人以上进行，方式一"],[1473,"第十七条　凡启动审查程序的，应当已经掌握部分违纪"],[1474,"第十八条　审查工作应当由两人以上进行，方式一般包"],[1477,"第十九条　审查结束后应当撰写工作报告，列明基本情"],[1479,"第二十条　团员依法受到刑事责任追究的，团组织应当"],[1483,"第二十一条　各级团组织应当建立受理及审查管理台账"],[1484,"第二十二条　在初步核实和审查过程中，有关团组织和"],[1486,"第二十三条　团支部大会讨论对团员的团纪处分，须有"],[1488,"第二十四条　团的基层委员会审议并作出团纪处分决定"],[1489,"第二十五条　县级以上团的各种委员会全体会议、委员"],[1490,"第二十六条　团组织在日常监督管理中，发现团员违纪"],[1492,"第二十七条　团纪处分决定自有处分批（核）准权限的"],[1493,"第二十八条　对不服处分决定的申诉，由批（核）准处"],[1495,"第二十九条　团纪处分决定作出后，应当在一个月内由"],[1497,"第三十条　受到警告及以上团纪处分的，应当由作出处"],[1498,"第三十一条　执行团纪处分决定的团组织，应当在三个"],[1499,"第三十二条　团纪处分批（核）准后，由受处分团员所"],[1501,"第三十三条　本规则所称以上、以下，除有特别标明外"],[1502,"第三十四条　本规则由共青团中央组织部负责解释。"],[1503,"第三十五条　本规则自2025年1月1日起施行。"],[1508,"第五条"],[1518,"第六条"],[1528,"第七条"],[1534,"第八条"],[1540,"第九条"],[1548,"第十条"],[1549,"第十一条"],[1550,"第十二条"],[1554,"第十三条"],[1564,"第十四条"],[1575,"第十五条因教育考试机构管理混乱、考试工作人员玩忽"],[1577,"第十六条"],[1578,"第十七条"],[1588,"第一条"],[1589,"第二条"],[1599,"第三条"],[1612,"第四条"],[1618,"第五条"],[1619,"第六条"],[1620,"第七条"],[1624,"第一条为维护学校正常的教育教学秩序，维护学校管理"],[1625,"第二条"],[1626,"第三条"],[1627,"第四条"],[1628,"第五条"],[1630,"第六条学生有违反宪法、反对四项基本原则、破坏安定"],[1631,"第七条"],[1632,"第八条学生有违反治安管理行为，由司法部门、公安机"],[1638,"第九条"],[1639,"第十条"],[1640,"第十一条"],[1641,"第十二条"],[1642,"第十三条"],[1643,"第十四条"],[1644,"第十五条对寻衅滋事、打架斗殴的，视情节，给予下列"],[1650,"第十六条威吓、辱骂、围攻教职工的，给予记过以上处"],[1651,"第十七条吸食毒品的，视情节，给予警告以上处分。第"],[1658,"第十九条"],[1664,"第二十条对考核(包括考试、考查)作弊或者违反考场"],[1669,"第二十一条"],[1670,"第二十二条学生不遵守国家和学校关于网络使用的有关"],[1671,"第二十三条"],[1672,"第二十四条不遵守法律、法规以及学校、用工单位管理"],[1673,"第二十五条"],[1674,"第二十六条"],[1676,"第二十七条"],[1681,"第二十八条"],[1683,"第二十九条"],[1686,"第三十条学生对处分决定有异议的，在接到学校处分决"],[1688,"第三十一条"],[1689,"第三十二条"],[1695,"第三十三条对本细则没有列入的违纪行为，可比照本细"],[1696,"第三十四条"],[1697,"第三十五条对在我校接受高等教育的全日制其他各类本"],[1698,"第三十六条"],[1699,"第三十七条"],[1700,"第三十八条"],[1704,"第一条"],[1705,"第二条"],[1706,"第三条本办法所称的申诉，是指学生对学校作出的涉及"],[1708,"第四条"],[1709,"第五条"],[1710,"第六条"],[1711,"第七条"],[1717,"第八条"],[1722,"第九条"],[1726,"第十条"],[1734,"第十一条"],[1735,"第十二条"],[1736,"第十三条"],[1737,"第十四条"],[1738,"第十五条"],[1739,"第十六条"],[1740,"第十七条"],[1747,"第十九条申诉处理委员会应根据复议情况提出书面意见"],[1755,"第二十条"],[1756,"第二十一条在申诉期间，原处理决定不停止执行。"],[1757,"第二十二条"],[1758,"第二十三条"],[1760,"第二十四条本办法自2017年9月1日起施行。"],[1761,"第二十五条"],[1862,"第一条"],[1863,"第二条"],[1864,"第三条"],[1865,"第四条"],[1876,"第五条"],[1881,"第六条"],[1884,"第八条"],[1887,"第九条"],[1893,"第十条"],[1894,"第十一条"],[1895,"第十二条大学生自办理离校及停保手续、并按学籍管理"],[1897,"第十三条"],[1898,"第十四条"],[1899,"第十五条"],[1904,"第十六条"],[1917,"第十七条一个参保年度内，住院个人自负属于支付范围"],[1921,"第十八条"],[1922,"第十九条"],[1923,"第二十条"],[1928,"第二十一条"],[1930,"第二十二条"],[1933,"第二十三条"],[1934,"第二十四条"],[1938,"第二十五条"],[1939,"第二十六条"],[1941,"第二十七条"],[1942,"第二十八条"],[1943,"第二十九条"],[1944,"第三十条"],[1945,"第三十一条"],[1947,"第三十二条"],[1948,"第三十三条"],[1949,"第三十四条"],[1952,"第三十五条"],[1953,"第三十六条"],[1955,"第三十七条"],[1956,"第三十八条校医院要建立、完善大学生医疗服务管理制"],[1957,"第三十九条"],[1958,"第四十条"],[1959,"第四十一条"],[1961,"第四十二条"],[1963,"第四十三条"],[1964,"第四十四条"]],"toc":[{"t":"一、学校简介","children":[{"t":"安徽大学简介","p":0},{"t":"安徽大学校名","p":8},{"t":"安徽大学校训","p":12},{"t":"安徽大学校歌","p":13}]},{"t":"二、行为规范","children":[{"t":"高等学校学生行为准则","p":17},{"t":"安徽大学学生管理办法(修订)","p":27},{"t":"安徽大学学生宿舍管理规定","p":109},{"t":"安徽大学本科学生校外住宿管理规定","p":170},{"t":"安徽大学学生宿舍空调使用文明公约","p":159},{"t":"安徽大学学生宿舍空调设备使用和管理办法(试行)","p":131}]},{"t":"三、教学管理","children":[{"t":"安徽大学本科学生学籍管理规定(修订)","p":213},{"t":"安徽大学免修、免听课程实施细则","p":383},{"t":"安徽大学本科课程考核管理办法","p":393},{"t":"安徽大学学生诚信考试承诺书","p":495},{"t":"安徽大学学位授予工作实施细则(修订)","p":503},{"t":"安徽大学学士学位授予工作实施细则(修订)","p":505},{"t":"安徽大学本科生辅修第二专业实施细则","p":570},{"t":"安徽大学学生海外交流学习管理办法","p":591},{"t":"安徽大学联合培养类本科学生管理暂行办法","p":661},{"t":"安徽大学本专科生延期毕业管理办法","p":673},{"t":"安徽大学本硕博一体化贯通培养试点实施办法","p":701,"s":1},{"t":"安徽大学微专业管理办法(试行)","p":722,"s":1}]},{"t":"四、评奖评优","children":[{"t":"安徽大学本科学生学年考核办法","p":742},{"t":"安徽大学本科学生奖学金评选办法(修订)","p":772},{"t":"安徽大学本科生国家奖学金管理实施细则(修订)","p":815},{"t":"安徽大学本科生国家励志奖学金管理实施细则(修订)","p":845},{"t":"安徽大学服兵役学生国家教育资助实施细则","p":869,"s":1},{"t":"安徽大学三好学生、优秀学生干部和先进班集体评选与表彰暂行办法(修订)","p":896},{"t":"安徽大学优秀毕业生评选和表彰办法","p":932}]},{"t":"五、资助办法","children":[{"t":"安徽大学本专科学生资助管理办法(修订)","p":964},{"t":"安徽大学家庭经济困难学生认定工作实施办法","p":1005},{"t":"安徽大学本科生国家助学金管理实施细则(修订)","p":1054},{"t":"安徽大学本专科学生减免学费实施细则(修订)","p":1077},{"t":"安徽大学本专科学生临时困难补助实施细则(修订)","p":1094},{"t":"安徽大学学生海外交流学习资助管理办法(修订)","q":"安徽大学学生海外交流学习资助管理办法(修订)"},{"t":"安徽大学勤工助学管理办法","p":1107},{"t":"关于加强学校大学生征兵工作的实施意见(修订)","q":"关于加强学校大学生征兵工作的实施意见(修订)"},{"t":"安徽大学推荐优秀应届本科毕业生免试攻读研究生工作实施办法","p":1166,"s":1}]},{"t":"六、团学工作","children":[{"t":"安徽大学团员教育评议、团籍注册和团内评优实施办法(修订)","p":1173},{"t":"安徽大学学生会章程","p":1245},{"t":"中国共产主义青年团纪律处分条例(试行)","p":1303,"s":1},{"t":"中国共产主义青年团纪律处分工作规则(试行)","p":1436,"s":1}]},{"t":"七、违纪处分","children":[{"t":"国家教育考试违规处理办法(节选)","p":1505},{"t":"安徽大学本科学生考试违规行为认定办法","p":1587},{"t":"安徽大学学生违纪处分实施细则(修订)","p":1621},{"t":"安徽大学学生申诉处理办法","p":1701}]},{"t":"八、心理健康教育","children":[{"t":"安徽大学学生心理咨询管理相关制度","p":1762},{"t":"关于进一步加强学生心理健康教育工作的实施意见","p":1806},{"t":"心理健康科普","p":1831,"s":1}]},{"t":"九、医保工作","children":[{"t":"安徽大学在校大学生基本医疗保险工作管理办法(修订)","p":1858}]},{"t":"十、其它","children":[{"t":"安徽大学学生服务热线","p":1965,"s":1},{"t":"学生承诺书","p":2001,"s":1}]}]};
+
+</script>
+<script>
+/* 安徽大学学生手册 · 下滑式全文查询
+   功能：目录跳转 / 关键词检索（显示命中附近内容并跳转）/ 自定义名称书签
+   纯静态：数据来自 data/handbook.js，直接打开 index.html 即可使用。 */
+(function () {
+  "use strict";
+
+  var data = window.HANDBOOK;
+  if (!data || !data.paras) {
+    document.body.innerHTML = "<p style='padding:40px;font-family:sans-serif'>数据文件 data/handbook.js 未能载入。</p>";
+    return;
+  }
+
+  var paras = data.paras;
+  var tables = data.tables || {};
+  var toc = data.toc || [];
+  var total = paras.length;
+
+  var RE_CHAPTER = /^第[一二三四五六七八九十百零〇]+章/;
+  var RE_ARTICLE = /^第[一二三四五六七八九十百零〇]+条/;
+  var RE_SPLIT = /[\s\p{P}\p{S}]/u;
+  var MARK_KEY = "ahdx.handbook.marks.v1";
+
+  var el = {
+    q: document.getElementById("q"),
+    form: document.getElementById("search-form"),
+    clear: document.getElementById("clear-btn"),
+    count: document.getElementById("search-count"),
+    hits: document.getElementById("hits"),
+    doc: document.getElementById("doc"),
+    meta: document.getElementById("meta-line"),
+    footnote: document.getElementById("footnote"),
+    paneToc: document.getElementById("pane-toc"),
+    paneMarks: document.getElementById("pane-marks"),
+    markCount: document.getElementById("mark-count"),
+    where: document.getElementById("where"),
+    whereText: document.getElementById("where-text"),
+    toTop: document.getElementById("to-top"),
+    sidebar: document.getElementById("sidebar"),
+    scrim: document.getElementById("scrim"),
+    menu: document.getElementById("menu-btn"),
+    popover: document.getElementById("popover"),
+    popoverInput: document.getElementById("popover-input"),
+    popoverWhere: document.getElementById("popover-where"),
+    popoverSave: document.getElementById("popover-save"),
+    popoverCancel: document.getElementById("popover-cancel"),
+    help: document.getElementById("help-btn"),
+    intro: document.getElementById("intro"),
+    introX: document.getElementById("intro-x"),
+    introStart: document.getElementById("intro-start"),
+    backup: document.getElementById("backup"),
+    backupScrim: document.getElementById("backup-scrim"),
+    backupText: document.getElementById("backup-text"),
+    backupTitle: document.getElementById("backup-title"),
+    backupSub: document.getElementById("backup-sub"),
+    backupDo: document.getElementById("backup-do"),
+    backupX: document.getElementById("backup-x"),
+    backupCancel: document.getElementById("backup-cancel")
+  };
+
+  /* ------------------------------------------------------------ 位置索引 */
+  var docOf = new Array(total).fill("");
+  var artOf = new Array(total).fill("");
+  var chapOf = new Array(total).fill("");
+
+  (function indexPositions() {
+    var d = 0, a = 0, c = 0;
+    var docStarts = Object.create(null);
+    (data.docs || []).forEach(function (pair) { docStarts[pair[0]] = pair[1]; });
+    var artStarts = Object.create(null);
+    (data.articles || []).forEach(function (pair) { artStarts[pair[0]] = pair[1]; });
+    var chapStarts = Object.create(null);
+    (data.chapters || []).forEach(function (pair) { chapStarts[pair[0]] = pair[1]; });
+    for (var i = 0; i < total; i++) {
+      // 换一份文件时清空章、条上下文，避免上一份的条号串到下一份。
+      if (docStarts[i]) { d = docStarts[i]; c = ""; a = ""; }
+      if (chapStarts[i]) c = chapStarts[i];
+      if (artStarts[i]) a = artStarts[i];
+      docOf[i] = d; chapOf[i] = c; artOf[i] = a;
+    }
+  })();
+
+  var docStarts = (data.docs || []).map(function (pair) { return pair[0]; });
+
+  // 目录里标记为补充录入的文件（正文扫描件缺失，由补充材料补上）。
+  var supplementStarts = Object.create(null);
+  toc.forEach(function (group) {
+    group.children.forEach(function (node) {
+      if (node.s && node.p !== undefined) supplementStarts[node.p] = true;
+    });
+  });
+
+  function whereText(i) {
+    var parts = [];
+    if (docOf[i]) parts.push(docOf[i]);
+    if (artOf[i]) parts.push(artOf[i]);
+    return parts.join(" · ") || "正文";
+  }
+
+  /* ------------------------------------------------------------ 归一化 */
+  function normalize(text) {
+    var chars = [];
+    var map = [];
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      var code = ch.charCodeAt(0);
+      if (code >= 0xff01 && code <= 0xff5e) ch = String.fromCharCode(code - 0xfee0);
+      else if (code === 0x3000) ch = " ";
+      if (RE_SPLIT.test(ch)) continue;
+      chars.push(ch.toLowerCase());
+      map.push(i);
+    }
+    return { n: chars.join(""), map: map };
+  }
+
+  var blocks = paras.map(function (text) { return normalize(text); });
+
+  /* ------------------------------------------------------------ 检索 */
+  function findAll(hay, needle) {
+    var out = [];
+    if (!needle) return out;
+    var pos = hay.indexOf(needle);
+    while (pos !== -1) {
+      out.push([pos, pos + needle.length]);
+      pos = hay.indexOf(needle, pos + 1);
+    }
+    return out;
+  }
+
+  function bigrams(text) {
+    var m = Object.create(null);
+    for (var i = 0; i < text.length - 1; i++) {
+      var g = text.substr(i, 2);
+      m[g] = (m[g] || 0) + 1;
+    }
+    return m;
+  }
+
+  function dice(a, b) {
+    var shared = 0, total = 0, k;
+    for (k in a) { total += a[k]; if (b[k]) shared += Math.min(a[k], b[k]); }
+    for (k in b) total += b[k];
+    return total ? (2 * shared) / total : 0;
+  }
+
+  function bestApprox(hay, term) {
+    if (term.length < 3 || hay.length < term.length) return null;
+    var grams = bigrams(term);
+    var best = { score: 0 };
+    for (var len = term.length; len <= Math.min(term.length + 2, hay.length); len++) {
+      for (var i = 0; i + len <= hay.length; i++) {
+        var s = dice(grams, bigrams(hay.substr(i, len)));
+        if (s > best.score) best = { score: s, start: i, end: i + len };
+      }
+    }
+    return best.score > 0 ? best : null;
+  }
+
+  function search(rawQuery) {
+    var terms = rawQuery.split(/\s+/).map(function (t) { return normalize(t).n; }).filter(Boolean);
+    if (!terms.length) return { terms: [], hits: [], exact: 0, approx: 0 };
+
+    var hits = [];
+    var used = Object.create(null);
+
+    for (var i = 0; i < total; i++) {
+      var spans = [];
+      var first = Infinity;
+      var ok = true;
+      for (var t = 0; t < terms.length; t++) {
+        var found = findAll(blocks[i].n, terms[t]);
+        if (!found.length) { ok = false; break; }
+        spans = spans.concat(found);
+        if (found[0][0] < first) first = found[0][0];
+      }
+      if (!ok) continue;
+      used[i] = true;
+      // 命中越靠前（越接近条文开头）越靠前展示；标题行额外加权。
+      var score = 1000 + terms.length * 8 + (60 - Math.min(60, first));
+      if ((RE_ARTICLE.test(paras[i]) || RE_CHAPTER.test(paras[i])) && first < 24) score += 60;
+      hits.push({ i: i, spans: spans, score: score, approx: false });
+    }
+
+    var exact = hits.length;
+    var approx = 0;
+
+    if (exact < 3 && terms.length) {
+      var longest = terms.reduce(function (a, b) { return b.length > a.length ? b : a; }, "");
+      var fuzzy = [];
+      for (var j = 0; j < total; j++) {
+        if (used[j]) continue;
+        var best = bestApprox(blocks[j].n, longest);
+        if (!best || best.score < 0.45) continue;
+        fuzzy.push({ i: j, spans: [[best.start, best.end]], score: best.score * 100, approx: true });
+      }
+      fuzzy.sort(function (a, b) { return b.score - a.score; });
+      fuzzy = fuzzy.slice(0, 8);
+      approx = fuzzy.length;
+      hits = hits.concat(fuzzy);
+    }
+
+    hits.sort(function (a, b) { return b.score !== a.score ? b.score - a.score : a.i - b.i; });
+    return { terms: terms, hits: hits, exact: exact, approx: approx };
+  }
+
+  /* ------------------------------------------------------------ 高亮 */
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function spansToRanges(i, spans, from, to) {
+    var block = blocks[i];
+    var ranges = [];
+    spans.forEach(function (s) {
+      var a = block.map[s[0]];
+      var b = block.map[s[1] - 1];
+      if (a === undefined || b === undefined) return;
+      var start = Math.max(a, from);
+      var end = Math.min(b + 1, to);
+      if (end > start) ranges.push([start, end]);
+    });
+    ranges.sort(function (x, y) { return x[0] - y[0]; });
+    var merged = [];
+    ranges.forEach(function (r) {
+      var last = merged[merged.length - 1];
+      if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+      else merged.push([r[0], r[1]]);
+    });
+    return merged;
+  }
+
+  function markup(i, ranges, from, to, cls) {
+    cls = cls || "strong";
+    var text = paras[i];
+    var html = "";
+    var cursor = from;
+    ranges.forEach(function (r) {
+      html += escapeHtml(text.slice(cursor, r[0])) +
+        '<mark class="' + cls + '">' + escapeHtml(text.slice(r[0], r[1])) + "</mark>";
+      cursor = r[1];
+    });
+    return html + escapeHtml(text.slice(cursor, to));
+  }
+
+  function snippet(i, spans, width, cls) {
+    var anchor = blocks[i].map[spans[0][0]];
+    if (anchor === undefined) anchor = 0;
+    var from = Math.max(0, anchor - Math.floor(width * 0.32));
+    var to = Math.min(paras[i].length, from + width);
+    var head = from > 0 ? '<span class="lead">…</span>' : "";
+    var tail = to < paras[i].length ? '<span class="lead">…</span>' : "";
+    return head + markup(i, spansToRanges(i, spans, from, to), from, to, cls) + tail;
+  }
+
+  /* ------------------------------------------------------------ 正文渲染 */
+  function toolsHtml(i) {
+    return '<span class="para-tools">' +
+      '<button class="tool" data-mark="' + i + '">书签</button>' +
+      '<button class="tool" data-copy="' + i + '">复制</button>' +
+      "</span>";
+  }
+
+  var chapterStarts = Object.create(null);
+  (data.chapters || []).forEach(function (p) { chapterStarts[p[0]] = true; });
+
+  var docStartMap = Object.create(null);
+  docStarts.forEach(function (i) { docStartMap[i] = true; });
+
+  function paraClass(i) {
+    var cls = "para";
+    if (docStartMap[i]) cls += " is-doc";
+    else if (chapterStarts[i]) cls += " is-chapter";
+    if (RE_ARTICLE.test(paras[i])) cls += " is-article";
+    return cls;
+  }
+
+  function tableHtml(table, index) {
+    var head = table.head.map(function (h) { return "<th>" + escapeHtml(h) + "</th>"; }).join("");
+    var rows = table.rows.map(function (r, n) {
+      var prev = n > 0 ? table.rows[n - 1][0] : null;
+      var cells = r.map(function (c, cIdx) {
+        var cls = cIdx === 0 ? ' class="cat"' : (cIdx === 3 ? ' class="score"' : "");
+        var value = (cIdx === 0 && c === prev) ? "" : escapeHtml(c);
+        return "<td" + cls + ">" + value + "</td>";
+      }).join("");
+      return "<tr>" + cells + "</tr>";
+    }).join("");
+    return '<figure class="table-block" id="p' + index + '">' +
+      (table.caption ? "<figcaption>" + escapeHtml(table.caption) + "</figcaption>" : "") +
+      "<table><thead><tr>" + head + "</tr></thead><tbody>" + rows + "</tbody></table></figure>";
+  }
+
+  function renderDoc() {
+    var html = [];
+    for (var i = 0; i < total; i++) {
+      if (tables[String(i)]) { html.push(tableHtml(tables[String(i)], i)); continue; }
+      var tag = supplementStarts[i]
+        ? '<span class="doc-tag">补充录入</span>'
+        : "";
+      html.push('<p class="' + paraClass(i) + '" id="p' + i + '">' +
+        escapeHtml(paras[i]) + tag + toolsHtml(i) + "</p>");
+    }
+    el.doc.innerHTML = html.join("");
+  }
+
+  function clearHighlights() {
+    el.doc.querySelectorAll("mark").forEach(function (m) {
+      var parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+  }
+
+  function highlightResult(result) {
+    clearHighlights();
+    var map = Object.create(null);
+    result.hits.forEach(function (hit) {
+      if (!map[hit.i]) map[hit.i] = { spans: [], cls: "strong" };
+      map[hit.i].spans = map[hit.i].spans.concat(hit.spans);
+      if (hit.approx) map[hit.i].cls = "approx";
+    });
+    Object.keys(map).forEach(function (key) {
+      var i = Number(key);
+      var node = document.getElementById("p" + i);
+      if (!node) return;
+      node.innerHTML = markup(i, spansToRanges(i, map[i].spans, 0, paras[i].length), 0, paras[i].length, map[i].cls) +
+        toolsHtml(i);
+    });
+    refreshMarkButtons();
+  }
+
+  /* ------------------------------------------------------------ 跳转 */
+  var lastTarget = null;
+
+  function jumpTo(i) {
+    var node = document.getElementById("p" + i);
+    if (!node) return;
+    if (lastTarget) lastTarget.classList.remove("is-target");
+    node.classList.add("is-target");
+    lastTarget = node;
+    node.scrollIntoView({ block: "center" });
+    setActiveToc(i);
+    updateWhere(i);
+  }
+
+  /* ------------------------------------------------------------ 目录 */
+  function renderToc() {
+    el.paneToc.innerHTML = toc.map(function (group, gi) {
+      var children = group.children.map(function (node) {
+        if (node.p !== undefined && node.p !== null) {
+          return '<button class="toc-item" data-jump="' + node.p + '">' + escapeHtml(node.t) +
+            (node.s ? '<span class="toc-note">补充</span>' : "") + "</button>";
+        }
+        return '<button class="toc-item" data-query="' + escapeHtml(node.q || node.t) + '">' +
+          escapeHtml(node.t) + "<span class='toc-note'>（正文缺失）</span></button>";
+      }).join("");
+      return '<details class="toc-group"' + (gi === 0 ? " open" : "") + ">" +
+        "<summary>" + escapeHtml(group.t) + "</summary>" + children + "</details>";
+    }).join("");
+  }
+
+  function setActiveToc(i) {
+    var items = el.paneToc.querySelectorAll(".toc-item[data-jump]");
+    var best = null;
+    items.forEach(function (item) {
+      if (Number(item.dataset.jump) <= i) best = item;
+    });
+    items.forEach(function (item) { item.classList.remove("is-active"); });
+    if (best) {
+      best.classList.add("is-active");
+      var group = best.closest("details");
+      if (group) group.open = true;
+    }
+  }
+
+  /* ------------------------------------------------------------ 书签 */
+  var marks = loadMarks();
+  var popoverTarget = null;
+  var INTRO_KEY = "ahdx.handbook.intro.v1";
+
+  function storageGet(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function storageSet(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* 隐私模式等场景忽略 */ }
+  }
+
+  function loadMarks() {
+    var raw;
+    try { raw = JSON.parse(window.localStorage.getItem(MARK_KEY) || "[]"); } catch (e) { raw = []; }
+    if (!Array.isArray(raw)) raw = [];
+    // 数据重建后段落号可能位移，用正文前缀重新定位。
+    return raw.filter(function (m) { return m && typeof m.p === "number"; }).map(function (m) {
+      var fp = m.fp || "";
+      if (!fp || (paras[m.p] || "").indexOf(fp) === 0) return m;
+      for (var i = 0; i < total; i++) {
+        if (paras[i].indexOf(fp) === 0) { m.p = i; break; }
+      }
+      return m;
+    });
+  }
+
+  function saveMarks() {
+    storageSet(MARK_KEY, JSON.stringify(marks));
+  }
+
+  function markFor(i) {
+    return marks.filter(function (m) { return m.p === i; })[0] || null;
+  }
+
+  function addMark(i, name) {
+    marks.push({
+      id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name: name,
+      p: i,
+      fp: paras[i].slice(0, 30),
+      ts: Date.now()
+    });
+    saveMarks();
+    renderMarks();
+    refreshMarkButtons();
+  }
+
+  function renderMarks() {
+    el.markCount.hidden = !marks.length;
+    el.markCount.textContent = marks.length;
+
+    var tools =
+      '<div class="marks-tools">' +
+      '<button class="btn tiny" id="marks-export">导出备份</button>' +
+      '<button class="btn tiny" id="marks-import">导入备份</button>' +
+      "</div>" +
+      '<p class="marks-hint">书签只存在这台设备的浏览器里：清理浏览器数据、换设备、用无痕模式都会丢失。' +
+      "重要的书签建议点「导出备份」，把得到的那段文字存进备忘录或发给自己。</p>";
+
+    if (!marks.length) {
+      el.paneMarks.innerHTML = '<p class="marks-empty">还没有书签。<br>' +
+        "点一下正文任意一段，会出现「书签」，就能给这个位置起个自己的名字，之后从这里一键跳回。</p>" + tools;
+    } else {
+      el.paneMarks.innerHTML = marks.slice().sort(function (a, b) { return a.p - b.p; }).map(function (m) {
+        return '<div class="mark" data-id="' + m.id + '">' +
+          '<button class="mark-name" data-goto="' + m.p + '">' + escapeHtml(m.name) + "</button>" +
+          '<span class="mark-actions">' +
+          '<button class="icon-btn" data-rename="' + m.id + '">改名</button>' +
+          '<button class="icon-btn danger" data-del="' + m.id + '">删除</button>' +
+          "</span>" +
+          '<span class="mark-where">' + escapeHtml(whereText(m.p)) + "</span>" +
+          "</div>";
+      }).join("") + tools;
+    }
+  }
+
+  var BACKUP_PREFIX = "AHDX1.";
+
+  function toBase64(text) {
+    var bytes = new TextEncoder().encode(text);
+    var binary = "";
+    for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  function fromBase64(code) {
+    var binary = atob(code);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  var backupMode = "import";
+
+  function buildBackupCode() {
+    var payload = marks.map(function (m) {
+      return { n: m.name, p: m.p, f: m.fp };
+    });
+    return BACKUP_PREFIX + toBase64(JSON.stringify(payload));
+  }
+
+  function openBackup(mode) {
+    if (mode === "export" && !marks.length) { toast("还没有书签可备份"); return; }
+    backupMode = mode;
+    var isExport = mode === "export";
+
+    el.backupTitle.textContent = isExport ? "书签备份" : "导入书签备份";
+    el.backupSub.textContent = isExport
+      ? "这段文字就是你的全部书签。复制它存进备忘录或发给自己发一份，以后换了设备、清了浏览器数据，粘回来就能恢复。"
+      : "把之前备份的那段文字整个粘到下面（以 AHDX1. 开头），点「导入」恢复。";
+    el.backupText.value = isExport ? buildBackupCode() : "";
+    el.backupText.readOnly = isExport;
+    el.backupText.placeholder = isExport ? "" : "在这里粘贴备份内容";
+    el.backupDo.textContent = isExport ? "复制" : "导入";
+    el.backupCancel.textContent = isExport ? "关闭" : "取消";
+
+    el.backup.hidden = false;
+    document.body.classList.add("intro-open");
+    el.backupText.focus();
+    if (isExport) el.backupText.select();
+  }
+
+  function closeBackup() {
+    el.backup.hidden = true;
+    document.body.classList.remove("intro-open");
+  }
+
+  function importMarks() {
+    var raw = el.backupText.value.replace(/\s+/g, "");
+    if (!raw) { toast("先粘贴备份内容"); return; }
+    var json = null;
+    try {
+      json = raw.indexOf(BACKUP_PREFIX) === 0 ? fromBase64(raw.slice(BACKUP_PREFIX.length)) : raw;
+    } catch (e) {
+      toast("这段备份读不出来，请检查是否粘全");
+      return;
+    }
+    var list;
+    try { list = JSON.parse(json); } catch (e) { toast("这段备份读不出来，请检查是否粘全"); return; }
+    if (!Array.isArray(list)) { toast("这段备份格式不对"); return; }
+
+    var added = 0;
+    list.forEach(function (item) {
+      if (!item || typeof item.p !== "number" || !item.n) return;
+      var fp = item.f || (paras[item.p] || "").slice(0, 30);
+      var dup = marks.some(function (m) { return m.fp === fp && m.name === item.n; });
+      if (dup) return;
+      marks.push({
+        id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name: String(item.n).slice(0, 40),
+        p: item.p,
+        fp: fp,
+        ts: Date.now()
+      });
+      added++;
+    });
+    saveMarks();
+    renderMarks();
+    refreshMarkButtons();
+    closeBackup();
+    toast(added ? "已导入 " + added + " 条书签" : "没有新的书签可导入");
+  }
+
+  function backupPrimary() {
+    if (backupMode === "export") {
+      copyText(el.backupText.value, "已复制，存到备忘录或发给自己");
+      el.backupText.select();
+      return;
+    }
+    importMarks();
+  }
+
+  function refreshMarkButtons() {
+    el.doc.querySelectorAll(".tool[data-mark]").forEach(function (btn) {
+      var i = Number(btn.dataset.mark);
+      btn.classList.toggle("on", !!markFor(i));
+      btn.textContent = markFor(i) ? "已加书签" : "书签";
+    });
+  }
+
+  function openPopover(anchorEl, i) {
+    popoverTarget = i;
+    el.popoverWhere.textContent = whereText(i);
+    el.popoverInput.value = (artOf[i] || docOf[i] || paras[i].slice(0, 12));
+    el.popover.hidden = false;
+    var rect = anchorEl.getBoundingClientRect();
+    var width = el.popover.offsetWidth;
+    var left = Math.min(Math.max(12, rect.left - width + rect.width), window.innerWidth - width - 12);
+    var top = rect.bottom + 8;
+    if (top + el.popover.offsetHeight > window.innerHeight - 12) {
+      top = Math.max(72, rect.top - el.popover.offsetHeight - 8);
+    }
+    el.popover.style.left = left + "px";
+    el.popover.style.top = top + "px";
+    el.popoverInput.focus();
+    el.popoverInput.select();
+  }
+
+  function closePopover() {
+    el.popover.hidden = true;
+    popoverTarget = null;
+  }
+
+  /* ------------------------------------------------------------ 检索界面 */
+  var currentResult = null;
+  var focusedHit = -1;
+
+  function renderHits(query, result) {
+    if (!query) { el.hits.hidden = true; el.count.hidden = true; return; }
+    el.count.hidden = false;
+    el.count.textContent = result.exact + " 处";
+
+    if (!result.hits.length) {
+      el.hits.hidden = false;
+      el.hits.innerHTML = '<div class="hits-empty">没有找到 <b>' + escapeHtml(query) + "</b>。<br>" +
+        "试试更短的关键词，比如查「转专业」而不是「转专业要什么条件」。</div>";
+      return;
+    }
+
+    var shown = result.hits.slice(0, 60);
+    var head = "找到 <b>" + result.exact + "</b> 处" +
+      (result.approx ? "（另有 " + result.approx + " 处近似匹配）" : "") +
+      (result.hits.length > shown.length ? "，先显示前 " + shown.length + " 处" : "");
+
+    el.hits.innerHTML = '<div class="hits-head"><span>' + head + "</span>" +
+      "<span>↑↓ 选择 · Enter 跳转</span></div>" +
+      shown.map(function (hit) {
+        return '<button class="hit" data-jump="' + hit.i + '">' +
+          '<span class="hit-where"><span class="chip">' + escapeHtml(docOf[hit.i] || "正文") + "</span>" +
+          '<span class="chip soft">' + escapeHtml(artOf[hit.i] || chapOf[hit.i] || "第 " + (hit.i + 1) + " 段") + "</span>" +
+          (hit.approx ? '<span class="chip soft">近似</span>' : "") +
+          "</span>" +
+          '<span class="hit-text">' + snippet(hit.i, hit.spans, 120, hit.approx ? "approx" : "strong") + "</span>" +
+          "</button>";
+      }).join("");
+    el.hits.hidden = false;
+    focusedHit = -1;
+  }
+
+  function runSearch() {
+    var query = el.q.value.trim();
+    el.clear.hidden = !query;
+    if (!query) {
+      currentResult = null;
+      el.hits.hidden = true;
+      el.count.hidden = true;
+      clearHighlights();
+      return;
+    }
+    currentResult = search(query);
+    renderHits(query, currentResult);
+    highlightResult(currentResult);
+  }
+
+  function focusHit(step) {
+    var hits = Array.prototype.slice.call(el.hits.querySelectorAll(".hit"));
+    if (!hits.length) return;
+    focusedHit = focusedHit < 0
+      ? (step > 0 ? 0 : hits.length - 1)
+      : (focusedHit + step + hits.length) % hits.length;
+    hits.forEach(function (h) { h.classList.remove("is-focused"); });
+    var node = hits[focusedHit];
+    if (!node) return;
+    node.classList.add("is-focused");
+    node.scrollIntoView({ block: "nearest" });
+  }
+
+  /* ------------------------------------------------------------ 位置提示 */
+  var ticking = false;
+  var offsets = [];
+
+  function measure() {
+    offsets = new Array(total);
+    var last = 0;
+    for (var i = 0; i < total; i++) {
+      var node = document.getElementById("p" + i);
+      if (node) last = node.offsetTop;
+      offsets[i] = last;
+    }
+  }
+
+  function updateWhere(i) {
+    if (i === undefined || i === null) return;
+    el.whereText.textContent = whereText(i);
+    el.where.hidden = false;
+  }
+
+  function currentIndex() {
+    if (!offsets.length) return 0;
+    var top = window.scrollY + 150;
+    var lo = 0, hi = offsets.length - 1, best = 0;
+    while (lo <= hi) {
+      var mid = (lo + hi) >> 1;
+      if (offsets[mid] <= top) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
+    }
+    // 刚跳到某一段时，滚动位置可能略高于它，这里以跳转目标为准。
+    if (lastTarget) {
+      var target = Number(lastTarget.id.slice(1));
+      if (target > best && lastTarget.getBoundingClientRect().top < window.innerHeight * 0.6) {
+        best = target;
+      }
+    }
+    return best;
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      el.toTop.hidden = window.scrollY < 400;
+      var i = currentIndex();
+      updateWhere(i);
+      setActiveToc(i);
+    });
+  }
+
+  /* ------------------------------------------------------------ 事件 */
+  var debounce = null;
+  el.q.addEventListener("input", function () {
+    clearTimeout(debounce);
+    debounce = setTimeout(runSearch, 130);
+  });
+
+  el.form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    runSearch();
+    var first = el.hits.querySelector(".hit");
+    if (first) jumpTo(Number(first.dataset.jump));
+  });
+
+  el.clear.addEventListener("click", function () {
+    el.q.value = "";
+    runSearch();
+    el.q.focus();
+  });
+
+  el.hits.addEventListener("click", function (e) {
+    var hit = e.target.closest(".hit");
+    if (!hit) return;
+    jumpTo(Number(hit.dataset.jump));
+    el.hits.hidden = true;
+  });
+
+  el.paneToc.addEventListener("click", function (e) {
+    var item = e.target.closest(".toc-item");
+    if (!item) return;
+    if (item.dataset.jump !== undefined) {
+      jumpTo(Number(item.dataset.jump));
+    } else if (item.dataset.query) {
+      el.q.value = item.dataset.query;
+      runSearch();
+      var first = el.hits.querySelector(".hit");
+      if (first) jumpTo(Number(first.dataset.jump));
+    }
+    closeNav();
+  });
+
+  el.paneMarks.addEventListener("click", function (e) {
+    if (e.target.closest("#marks-export")) { openBackup("export"); closeNav(); return; }
+    if (e.target.closest("#marks-import")) { openBackup(); closeNav(); return; }
+
+    var goto = e.target.closest("[data-goto]");
+    if (goto) { jumpTo(Number(goto.dataset.goto)); closeNav(); return; }
+
+    var rename = e.target.closest("[data-rename]");
+    if (rename) {
+      var row = rename.closest(".mark");
+      var current = marks.filter(function (m) { return m.id === rename.dataset.rename; })[0];
+      if (!current) return;
+      var nameNode = row.querySelector(".mark-name");
+      var input = document.createElement("input");
+      input.className = "mark-input";
+      input.value = current.name;
+      input.maxLength = 40;
+      nameNode.replaceWith(input);
+      input.focus();
+      input.select();
+      var commit = function () {
+        var value = input.value.trim();
+        if (value) { current.name = value; saveMarks(); }
+        renderMarks();
+      };
+      input.addEventListener("blur", commit);
+      input.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter") { ev.preventDefault(); input.blur(); }
+        if (ev.key === "Escape") { input.value = current.name; input.blur(); }
+      });
+      return;
+    }
+
+    var del = e.target.closest("[data-del]");
+    if (del) {
+      marks = marks.filter(function (m) { return m.id !== del.dataset.del; });
+      saveMarks();
+      renderMarks();
+      refreshMarkButtons();
+    }
+  });
+
+  el.doc.addEventListener("click", function (e) {
+    var markBtn = e.target.closest("[data-mark]");
+    if (markBtn) {
+      var i = Number(markBtn.dataset.mark);
+      var existing = markFor(i);
+      if (existing) { switchTab("marks"); closeNav(); return; }
+      openPopover(markBtn, i);
+      return;
+    }
+    var copyBtn = e.target.closest("[data-copy]");
+    if (copyBtn) {
+      var idx = Number(copyBtn.dataset.copy);
+      copyText(whereText(idx) + "\n" + paras[idx]);
+      return;
+    }
+
+    // 触屏没有悬停：点一下段落，这一段的操作按钮才出现，点别处收起。
+    var para = e.target.closest(".para");
+    var wasOpen = para && para.classList.contains("is-open");
+    closeParaTools();
+    if (para && !wasOpen) para.classList.add("is-open");
+  });
+
+  function closeParaTools() {
+    el.doc.querySelectorAll(".para.is-open").forEach(function (node) {
+      node.classList.remove("is-open");
+    });
+  }
+
+  /* ---------------------------------------------------------- 使用说明 */
+  function showIntro() {
+    el.intro.hidden = false;
+    document.body.classList.add("intro-open");
+    if (el.introStart) el.introStart.focus();
+  }
+
+  function hideIntro() {
+    if (el.intro.hidden) return;
+    el.intro.hidden = true;
+    document.body.classList.remove("intro-open");
+    storageSet(INTRO_KEY, "1");   // 记住已看过，下次进站不再自动弹出
+  }
+
+  el.help.addEventListener("click", showIntro);
+  el.introX.addEventListener("click", hideIntro);
+  el.introStart.addEventListener("click", hideIntro);
+  el.intro.addEventListener("click", function (e) {
+    if (e.target.hasAttribute("data-intro-close")) hideIntro();
+  });
+
+  el.backupX.addEventListener("click", closeBackup);
+  el.backupCancel.addEventListener("click", closeBackup);
+  el.backupScrim.addEventListener("click", closeBackup);
+  el.backupDo.addEventListener("click", backupPrimary);
+
+  el.popoverSave.addEventListener("click", function () {
+    if (popoverTarget === null) return;
+    var name = el.popoverInput.value.trim() || whereText(popoverTarget);
+    addMark(popoverTarget, name);
+    closePopover();
+    toast("已加书签");
+  });
+
+  el.popoverCancel.addEventListener("click", closePopover);
+
+  el.popoverInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); el.popoverSave.click(); }
+    if (e.key === "Escape") closePopover();
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!el.popover.hidden && !el.popover.contains(e.target) && !e.target.closest("[data-mark]")) closePopover();
+    if (!el.hits.hidden && !el.hits.contains(e.target) && !el.form.contains(e.target)) el.hits.hidden = true;
+    if (!e.target.closest(".para")) closeParaTools();
+  });
+
+  document.querySelectorAll(".tab").forEach(function (tab) {
+    tab.addEventListener("click", function () { switchTab(tab.dataset.tab); });
+  });
+
+  function switchTab(name) {
+    document.querySelectorAll(".tab").forEach(function (tab) {
+      var on = tab.dataset.tab === name;
+      tab.classList.toggle("is-active", on);
+      tab.setAttribute("aria-selected", String(on));
+    });
+    el.paneToc.hidden = name !== "toc";
+    el.paneMarks.hidden = name !== "marks";
+  }
+
+  document.addEventListener("keydown", function (e) {
+    var typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault(); el.q.focus(); el.q.select(); return;
+    }
+    if (e.key === "/" && !typing) { e.preventDefault(); el.q.focus(); return; }
+    if (e.key === "Escape") {
+      if (!el.intro.hidden) { hideIntro(); return; }
+      if (!el.backup.hidden) { closeBackup(); return; }
+      if (!el.popover.hidden) { closePopover(); return; }
+      if (document.body.classList.contains("nav-open")) { closeNav(); return; }
+      if (el.q.value) { el.q.value = ""; runSearch(); return; }
+      if (!el.hits.hidden) el.hits.hidden = true;
+      closeParaTools();
+      return;
+    }
+    if (e.key === "ArrowDown" && document.activeElement === el.q) { e.preventDefault(); focusHit(1); return; }
+    if (e.key === "ArrowUp" && document.activeElement === el.q) { e.preventDefault(); focusHit(-1); return; }
+    if (e.key === "Enter" && document.activeElement === el.q) {
+      var focused = el.hits.querySelector(".hit.is-focused") || el.hits.querySelector(".hit");
+      if (focused) { e.preventDefault(); jumpTo(Number(focused.dataset.jump)); el.hits.hidden = true; }
+    }
+  });
+
+  el.menu.addEventListener("click", function () {
+    var open = document.body.classList.toggle("nav-open");
+    el.menu.setAttribute("aria-expanded", String(open));
+    el.scrim.hidden = !open;
+  });
+
+  el.scrim.addEventListener("click", closeNav);
+
+  function closeNav() {
+    document.body.classList.remove("nav-open");
+    el.menu.setAttribute("aria-expanded", "false");
+    el.scrim.hidden = true;
+  }
+
+  el.toTop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", function () { measure(); onScroll(); });
+
+  function copyText(text, message) {
+    var done = function () { toast(message || "已复制"); };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand("copy"); done(); } catch (err) { /* 忽略 */ }
+    document.body.removeChild(area);
+  }
+
+  var toastTimer = null;
+  function toast(message) {
+    var node = document.querySelector(".toast");
+    if (!node) {
+      node = document.createElement("div");
+      node.className = "toast";
+      document.body.appendChild(node);
+    }
+    node.textContent = message;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { node.remove(); }, 1600);
+  }
+
+  /* ------------------------------------------------------------ 启动 */
+  var meta = data.meta || {};
+  el.meta.textContent = "共 " + total + " 段 · 约 " +
+    (Math.round((meta.chars || 0) / 1000) / 10).toFixed(1) + " 万字 · " +
+    (toc.reduce(function (n, g) { return n + g.children.length; }, 0)) + " 个目录条目";
+
+  el.footnote.textContent =
+    "内容按原文顺序完整呈现，共 " + total + " 段、" +
+    (Math.round((meta.chars || 0) / 1000) / 10).toFixed(1) + " 万字；其中 " +
+    (meta.supplements || 0) + " 份文件由补充材料录入（标注见目录）。" +
+    "原始 Word 为扫描识别稿，个别字词可能存在识别误差，正式引用请以印发版本为准。";
+
+  renderToc();
+  renderDoc();
+  renderMarks();
+  refreshMarkButtons();
+  measure();
+  updateWhere(0);
+
+  // 第一次进来先看使用说明；关掉后记住，之后点右上角「?」随时再看。
+  if (!storageGet(INTRO_KEY)) showIntro();
+
+  if (window.location.hash) {
+    var m = /^#p(\d+)$/.exec(window.location.hash);
+    if (m) jumpTo(Number(m[1]));
+  }
+
+  window.addEventListener("load", measure);
+})();
+
+</script>
+</body>
+</html>
