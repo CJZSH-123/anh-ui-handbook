@@ -25,6 +25,9 @@ python -m http.server 5178
   的文字，把它存进备忘录或发给自己；以后清了浏览器数据、换了设备，粘回「导入备份」就能恢复。
   这是目前唯一可靠的备份方式——书签默认只存在本机浏览器里。
 - **使用说明**：第一次进站会自动弹出；关掉后想再看，点顶部右侧的「?」随时打开。
+- **跨设备同步**（需先部署到 Vercel 并接入数据库，见 `DEPLOY.md`）：在「书签」页签里点
+  「开启同步」会得到一串 12 位同步码；在手机或别的浏览器输入同一个码，书签即可互通。
+  开启后本机书签变化会自动上传，打开页面时会自动取回。只上传书签的名字和段落位置，不含正文。
 
 ### 在手机上用
 
@@ -67,6 +70,8 @@ source/handbook-raw.txt 从 .doc 提取出的原始文本
 source/toc.txt          目录（一行一个条目，# 开头是部分标题）
 source/supplements/     补充材料（9 份），index.json 记录各自插入位置
 tools/                  doc_extract.py 提取、build_data.py 构建、build_single.py 打包单文件
+api/sync.js             Vercel Serverless 函数：书签跨设备同步接口
+DEPLOY.md               上线步骤（Vercel / GitHub Pages）与同步配置
 ```
 
 ## 重新构建
@@ -77,6 +82,12 @@ tools/                  doc_extract.py 提取、build_data.py 构建、build_sin
 python tools/doc_extract.py <学生手册.doc> source/handbook-raw.txt
 python tools/build_data.py --report      # --report 会打印目录匹配情况
 python tools/build_single.py             # 重新打包手机用的单文件版
+```
+
+本地想试跨设备同步（内存版假后端，仅供测试）：
+
+```
+node tools/mock-sync-server.js 5181
 ```
 
 要改内容：动 `source/toc.txt`（目录）或 `source/supplements/`（补充材料），

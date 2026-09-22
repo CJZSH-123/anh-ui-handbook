@@ -1,66 +1,96 @@
-# 上线到 GitHub Pages
+# 上线与跨设备同步
 
-这个项目是纯静态网页，不需要构建、不需要服务器，可以直接用 GitHub Pages 免费托管。
+这个项目是纯静态网页，不需要构建。**托管到 Vercel 后还能额外获得「同步码」跨设备同步书签**。
 
-## 一、先在本地留一个可回退的版本
+---
 
-（这一步我已经做过了，仓库里应该已经有一次提交。）
+## 一、先把代码传到 GitHub
 
-```
-git log --oneline
-```
-
-## 二、在 GitHub 上建仓库
-
-1. 打开 https://github.com/new
-2. **Repository name** 填一个名字，例如 `anh-ui-handbook`
-3. 选择 **Public**（公开）
-4. **不要**勾选 Add a README / .gitignore / license —— 本地已经有文件了，勾了反而冲突
-5. 点 **Create repository**
-
-## 三、把本地内容推上去
-
-创建完成后，GitHub 会显示仓库地址，形如
-`https://github.com/你的用户名/anh-ui-handbook.git`。在本项目目录执行：
+本地已经有一次提交（分支 `main`）。在 GitHub 上新建一个 **Public** 仓库（不要勾选任何初始化文件），
+然后：
 
 ```
-git remote add origin https://github.com/你的用户名/anh-ui-handbook.git
+git remote add origin https://github.com/你的用户名/仓库名.git
 git push -u origin main
 ```
 
-第一次推送会弹窗要求登录 GitHub（浏览器授权或输入账号 + 令牌），按提示完成即可。
-如果弹的是"密码"输入框且提示不支持密码，就去
-https://github.com/settings/tokens 生成一个 token（勾选 `repo`），把它当密码填进去。
+推送时会要求登录 GitHub，按提示授权即可。
 
-## 四、打开网页
+---
 
-1. 仓库页面 → **Settings** → 左侧 **Pages**
-2. **Source** 选 `Deploy from a branch`
-3. **Branch** 选 `main`，目录选 `/ (root)`，点 **Save**
-4. 等 1～2 分钟，页面顶部会出现网址，形如
-   `https://你的用户名.github.io/anh-ui-handbook/`
+## 二、部署到 Vercel
 
-这个网址就是最终链接，手机、别人的电脑都能直接打开，不用你开机、不用连你的局域网。
-它同时支持 `https`，书签、剪贴板这些功能在手机上会更正常。
+1. 打开 https://vercel.com ，用 GitHub 账号登录
+2. **Add New → Project**，选中刚推上去的仓库
+3. Framework Preset 选 **Other**，Build Command 和 Output Directory 都留空
+4. 点 **Deploy**，大约半分钟就有网址，形如 `https://你的项目名.vercel.app`
 
-## 五、以后再改内容
+到这里网页就能用了，但「跨设备同步」还不可用——因为它需要一个存储。做完下一步才有。
 
-改完 `source/` 里的目录或补充材料后，跑：
+---
+
+## 三、开启跨设备同步（可选，但推荐）
+
+同步用的是 Upstash Redis，Vercel 市场里可以一键接入，有免费额度。
+
+1. Vercel 项目页面 → **Storage** → **Create Database** → 选 **Upstash Redis**（或 Vercel KV）
+2. 创建时选择 **Connect to Project**，指向这个项目
+3. 接好后 Vercel 会自动注入环境变量（`KV_REST_API_URL` / `KV_REST_API_TOKEN`，
+   或 `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`，两种命名代码都认）
+4. **Redeploy** 一次（Deployments → 最新一条 → Redeploy），让环境变量生效
+
+完成后打开网页，左侧「书签」页签里会出现「跨设备同步」：点「开启同步」得到一串 12 位同步码，
+在手机、别的浏览器里输入同一个码，书签就互通了。
+
+**关于隐私**：同步只上传书签的**名字、段落位置和一句指纹**，不含手册正文，也不含任何账号信息。
+同步码本身就是凭证，等于密码，别公开发出去。
+
+---
+
+## 四、本地想先试同步
+
+不用部署也能在本地把流程走一遍，仓库里带了一个内存版假后端（进程重启数据就没了，仅供测试）：
 
 ```
-python tools/build_data.py
-python tools/build_single.py
+node tools/mock-sync-server.js 5181
+```
+
+然后浏览器打开 http://127.0.0.1:5181 ，同步功能就是可用的。
+
+---
+
+## 五、也可以只用 GitHub Pages（但没有同步）
+
+如果不需要跨设备同步，GitHub Pages 更省事：
+
+1. 仓库 **Settings → Pages**
+2. Source 选 `Deploy from a branch`，Branch 选 `main`、目录 `/ (root)`，保存
+3. 等 1～2 分钟，得到 `https://你的用户名.github.io/仓库名/`
+
+Pages 只能托管静态文件，跑不了 `api/sync`，所以页面里同步区会显示"服务未启用"，
+其它功能（检索、目录、书签、导出备份）都正常。
+
+---
+
+## 六、以后改内容
+
+改完 `source/toc.txt` 或 `source/supplements/` 之后：
+
+```
+python tools/build_data.py       # 重建正文与目录
+python tools/build_single.py     # 重新打包手机单文件版
 git add -A
 git commit -m "更新手册内容"
 git push
 ```
 
-GitHub Pages 会自动重新发布，一两分钟后生效。
+Vercel 会自动重新部署，GitHub Pages 同理。
 
-## 说明
+---
 
-- `dist/学生手册查询.html` 是单文件版，也会一起发布，别人可以直接下载到自己手机上用。
-- 原始扫描件 `source/handbook-original.doc` 已在 `.gitignore` 里排除，不会上传。
-  如果想连原始文件一起传，把 `.gitignore` 里那一行删掉即可。
-- 想让页面出现在仓库主页展示栏，可以在仓库 **Settings → Pages** 里换个自定义域名，
-  或者把网址写进仓库的 About 描述。
+## 附：文件说明
+
+- `dist/学生手册查询.html`：单文件版，会一起发布，别人可直接下载到手机上离线用
+  （单文件版里跨设备同步不可用，因为脱离了服务器）
+- `source/handbook-original.doc`：原始扫描件，已在 `.gitignore` 中排除，不会上传；
+  想一起传就把 `.gitignore` 里那一行删掉

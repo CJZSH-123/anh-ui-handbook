@@ -19,6 +19,7 @@
   var RE_ARTICLE = /^第[一二三四五六七八九十百零〇]+条/;
   var RE_SPLIT = /[\s\p{P}\p{S}]/u;
   var MARK_KEY = "ahdx.handbook.marks.v1";
+  var SYNC_KEY = "ahdx.handbook.sync.v1";
 
   var el = {
     q: document.getElementById("q"),
@@ -421,12 +422,14 @@
     saveMarks();
     renderMarks();
     refreshMarkButtons();
+    schedulePushSync();
   }
 
   function renderMarks() {
     el.markCount.hidden = !marks.length;
     el.markCount.textContent = marks.length;
 
+    var syncBox = renderSyncBox();
     var tools =
       '<div class="marks-tools">' +
       '<button class="btn tiny" id="marks-export">导出备份</button>' +
@@ -437,7 +440,8 @@
 
     if (!marks.length) {
       el.paneMarks.innerHTML = '<p class="marks-empty">还没有书签。<br>' +
-        "点一下正文任意一段，会出现「书签」，就能给这个位置起个自己的名字，之后从这里一键跳回。</p>" + tools;
+        "点一下正文任意一段，会出现「书签」，就能给这个位置起个自己的名字，之后从这里一键跳回。</p>" +
+        syncBox + tools;
     } else {
       el.paneMarks.innerHTML = marks.slice().sort(function (a, b) { return a.p - b.p; }).map(function (m) {
         return '<div class="mark" data-id="' + m.id + '">' +
@@ -448,8 +452,192 @@
           "</span>" +
           '<span class="mark-where">' + escapeHtml(whereText(m.p)) + "</span>" +
           "</div>";
-      }).join("") + tools;
+      }).join("") + syncBox + tools;
     }
+  }
+
+  /* -------------------------------------------------------- 跨设备同步 */
+  var sync = { code: "", enabled: false, lastAt: 0, available: null, busy: false, note: "" };
+
+  function loadSync() {
+    try {
+      var raw = JSON.parse(window.localStorage.getItem(SYNC_KEY) || "{}");
+      if (raw && typeof raw === "object") {
+        sync.code = raw.code || "";
+        sync.enabled = !!raw.enabled && !!raw.code;
+        sync.lastAt = raw.lastAt || 0;
+      }
+    } catch (e) { /* 忽略 */ }
+  }
+
+  function saveSync() {
+    storageSet(SYNC_KEY, JSON.stringify({
+      code: sync.code, enabled: sync.enabled, lastAt: sync.lastAt
+    }));
+  }
+
+  function syncPayload() {
+    return marks.map(function (m) { return { n: m.name, p: m.p, f: m.fp }; });
+  }
+
+  function clockText(ts) {
+    var d = new Date(ts);
+    function p(n) { return (n < 10 ? "0" : "") + n; }
+    return p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+
+  function formatCode(code) {
+    return code.replace(/(.{4})(?=.)/g, "$1-");
+  }
+
+  function probeSync() {
+    if (window.location.protocol === "file:") {
+      sync.available = false;
+      renderMarks();
+      return;
+    }
+    fetch("api/sync?probe=1", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
+      .then(function (j) { sync.available = !!(j && j.backend); })
+      .catch(function () { sync.available = false; })
+      .then(function () { renderMarks(); });
+  }
+
+  function pushSync(silent) {
+    if (!sync.enabled || !sync.code) return Promise.resolve(false);
+    return fetch("api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: sync.code, data: syncPayload() }),
+    })
+      .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function (j) {
+        sync.lastAt = j.updatedAt || Date.now();
+        sync.note = "已同步 " + clockText(sync.lastAt);
+        saveSync();
+        renderMarks();
+        if (!silent) toast("已同步到云端");
+        return true;
+      })
+      .catch(function () {
+        sync.note = "同步失败，请检查网络后点「立即同步」";
+        renderMarks();
+        if (!silent) toast("同步失败");
+        return false;
+      });
+  }
+
+  function pullSync(silent) {
+    if (!sync.enabled || !sync.code) return Promise.resolve(false);
+    return fetch("api/sync?code=" + encodeURIComponent(sync.code), { cache: "no-store" })
+      .then(function (r) {
+        if (r.status === 404) return { data: [] };
+        if (!r.ok) throw new Error("http " + r.status);
+        return r.json();
+      })
+      .then(function (j) {
+        var added = mergeMarks(j.data || []);
+        if (added) { saveMarks(); renderMarks(); refreshMarkButtons(); }
+        return pushSync(true).then(function () {
+          if (!silent && added) toast("已从云端取回 " + added + " 条书签");
+          else if (!silent) toast("已是最新");
+          return added;
+        });
+      })
+      .catch(function () {
+        sync.note = "读取失败，请检查同步码或网络";
+        renderMarks();
+        if (!silent) toast("读取失败");
+        return false;
+      });
+  }
+
+  function enableSync() {
+    if (sync.busy) return;
+    sync.busy = true;
+    sync.note = "正在生成同步码…";
+    renderMarks();
+    fetch("api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: syncPayload() }),
+    })
+      .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function (j) {
+        sync.code = j.code;
+        sync.enabled = true;
+        sync.lastAt = j.updatedAt || Date.now();
+        sync.note = "同步已开启";
+        saveSync();
+        toast("同步码已生成");
+      })
+      .catch(function () {
+        sync.note = "生成失败，请稍后再试";
+        toast("生成同步码失败");
+      })
+      .then(function () { sync.busy = false; renderMarks(); });
+  }
+
+  function connectSync(value) {
+    var code = String(value || "").replace(/[^0-9a-zA-Z]/g, "").toUpperCase();
+    if (code.length !== 12) { toast("同步码是 12 位，请检查"); return; }
+    sync.code = code;
+    sync.enabled = true;
+    sync.note = "正在取回…";
+    saveSync();
+    renderMarks();
+    pullSync(false);
+  }
+
+  function disableSync() {
+    sync.enabled = false;
+    sync.code = "";
+    sync.note = "";
+    saveSync();
+    renderMarks();
+    toast("已断开同步，本机书签保留");
+  }
+
+  var pushTimer = null;
+  function schedulePushSync() {
+    if (!sync.enabled) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(function () { pushSync(true); }, 1500);
+  }
+
+  function renderSyncBox() {
+    var head = '<div class="sync-head">跨设备同步</div>';
+
+    if (sync.available === null) {
+      return '<div class="sync-box">' + head +
+        '<p class="sync-note">正在检测同步服务…</p></div>';
+    }
+
+    if (!sync.available) {
+      return '<div class="sync-box">' + head +
+        '<p class="sync-note">同步服务未启用。部署到 Vercel 并接上数据库后，这里就能生成同步码，' +
+        "凭码在手机和电脑之间同步书签（见 DEPLOY.md）。现在可以先用下面的「导出/导入备份」手动搬。</p></div>";
+    }
+
+    if (!sync.enabled) {
+      return '<div class="sync-box">' + head +
+        '<p class="sync-note">开启后会生成一个 12 位同步码：在手机、别的浏览器里输入同一个码，' +
+        "书签就能互相取回。只上传书签的名字和段落位置，不含正文。</p>" +
+        '<button class="btn tiny primary" id="sync-enable">开启同步，生成同步码</button>' +
+        '<div class="sync-row">' +
+        '<input class="sync-input" id="sync-code-input" maxlength="16" placeholder="已有同步码？填这里">' +
+        '<button class="btn tiny" id="sync-connect">连接</button>' +
+        "</div></div>";
+    }
+
+    return '<div class="sync-box">' + head +
+      '<p class="sync-code" id="sync-code">' + escapeHtml(formatCode(sync.code)) + "</p>" +
+      '<div class="sync-row">' +
+      '<button class="btn tiny" id="sync-copy">复制同步码</button>' +
+      '<button class="btn tiny" id="sync-now">立即同步</button>' +
+      '<button class="btn tiny" id="sync-off">断开</button>' +
+      "</div>" +
+      '<p class="sync-note">' + escapeHtml(sync.note || "已开启") + "</p></div>";
   }
 
   var BACKUP_PREFIX = "AHDX1.";
@@ -517,8 +705,19 @@
     try { list = JSON.parse(json); } catch (e) { toast("这段备份读不出来，请检查是否粘全"); return; }
     if (!Array.isArray(list)) { toast("这段备份格式不对"); return; }
 
+    var added = mergeMarks(list);
+    saveMarks();
+    renderMarks();
+    refreshMarkButtons();
+    schedulePushSync();
+    closeBackup();
+    toast(added ? "已导入 " + added + " 条书签" : "没有新的书签可导入");
+  }
+
+  // 合并一批书签（导入备份、跨设备取回都用它），返回新增条数。
+  function mergeMarks(list) {
     var added = 0;
-    list.forEach(function (item) {
+    (Array.isArray(list) ? list : []).forEach(function (item) {
       if (!item || typeof item.p !== "number" || !item.n) return;
       var fp = item.f || (paras[item.p] || "").slice(0, 30);
       var dup = marks.some(function (m) { return m.fp === fp && m.name === item.n; });
@@ -532,11 +731,7 @@
       });
       added++;
     });
-    saveMarks();
-    renderMarks();
-    refreshMarkButtons();
-    closeBackup();
-    toast(added ? "已导入 " + added + " 条书签" : "没有新的书签可导入");
+    return added;
   }
 
   function backupPrimary() {
@@ -737,6 +932,18 @@
   el.paneMarks.addEventListener("click", function (e) {
     if (e.target.closest("#marks-export")) { openBackup("export"); closeNav(); return; }
     if (e.target.closest("#marks-import")) { openBackup(); closeNav(); return; }
+    if (e.target.closest("#sync-enable")) { enableSync(); return; }
+    if (e.target.closest("#sync-copy")) {
+      copyText(sync.code, "同步码已复制");
+      return;
+    }
+    if (e.target.closest("#sync-now")) { pushSync(false); return; }
+    if (e.target.closest("#sync-off")) { disableSync(); return; }
+    if (e.target.closest("#sync-connect")) {
+      var input = el.paneMarks.querySelector("#sync-code-input");
+      connectSync(input ? input.value : "");
+      return;
+    }
 
     var goto = e.target.closest("[data-goto]");
     if (goto) { jumpTo(Number(goto.dataset.goto)); closeNav(); return; }
@@ -756,7 +963,7 @@
       input.select();
       var commit = function () {
         var value = input.value.trim();
-        if (value) { current.name = value; saveMarks(); }
+        if (value) { current.name = value; saveMarks(); schedulePushSync(); }
         renderMarks();
       };
       input.addEventListener("blur", commit);
@@ -773,6 +980,7 @@
       saveMarks();
       renderMarks();
       refreshMarkButtons();
+      schedulePushSync();
     }
   });
 
@@ -956,10 +1164,14 @@
 
   renderToc();
   renderDoc();
+  loadSync();
   renderMarks();
   refreshMarkButtons();
   measure();
   updateWhere(0);
+
+  probeSync();
+  if (sync.enabled) pullSync(true);
 
   // 第一次进来先看使用说明；关掉后记住，之后点右上角「?」随时再看。
   if (!storageGet(INTRO_KEY)) showIntro();
