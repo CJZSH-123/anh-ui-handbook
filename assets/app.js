@@ -82,14 +82,6 @@
 
   var docStarts = (data.docs || []).map(function (pair) { return pair[0]; });
 
-  // 目录里标记为补充录入的文件（正文扫描件缺失，由补充材料补上）。
-  var supplementStarts = Object.create(null);
-  toc.forEach(function (group) {
-    group.children.forEach(function (node) {
-      if (node.s && node.p !== undefined) supplementStarts[node.p] = true;
-    });
-  });
-
   function whereText(i) {
     var parts = [];
     if (docOf[i]) parts.push(docOf[i]);
@@ -296,11 +288,8 @@
     var html = [];
     for (var i = 0; i < total; i++) {
       if (tables[String(i)]) { html.push(tableHtml(tables[String(i)], i)); continue; }
-      var tag = supplementStarts[i]
-        ? '<span class="doc-tag">补充录入</span>'
-        : "";
       html.push('<p class="' + paraClass(i) + '" id="p' + i + '">' +
-        escapeHtml(paras[i]) + tag + toolsHtml(i) + "</p>");
+        escapeHtml(paras[i]) + toolsHtml(i) + "</p>");
     }
     el.doc.innerHTML = html.join("");
   }
@@ -350,11 +339,10 @@
     el.paneToc.innerHTML = toc.map(function (group, gi) {
       var children = group.children.map(function (node) {
         if (node.p !== undefined && node.p !== null) {
-          return '<button class="toc-item" data-jump="' + node.p + '">' + escapeHtml(node.t) +
-            (node.s ? '<span class="toc-note">补充</span>' : "") + "</button>";
+          return '<button class="toc-item" data-jump="' + node.p + '">' + escapeHtml(node.t) + "</button>";
         }
         return '<button class="toc-item" data-query="' + escapeHtml(node.q || node.t) + '">' +
-          escapeHtml(node.t) + "<span class='toc-note'>（正文缺失）</span></button>";
+          escapeHtml(node.t) + "</button>";
       }).join("");
       return '<details class="toc-group"' + (gi === 0 ? " open" : "") + ">" +
         "<summary>" + escapeHtml(group.t) + "</summary>" + children + "</details>";
@@ -1158,8 +1146,7 @@
 
   el.footnote.textContent =
     "内容按原文顺序完整呈现，共 " + total + " 段、" +
-    (Math.round((meta.chars || 0) / 1000) / 10).toFixed(1) + " 万字；其中 " +
-    (meta.supplements || 0) + " 份文件由补充材料录入（标注见目录）。" +
+    (Math.round((meta.chars || 0) / 1000) / 10).toFixed(1) + " 万字。" +
     "原始 Word 为扫描识别稿，个别字词可能存在识别误差，正式引用请以印发版本为准。";
 
   renderToc();
