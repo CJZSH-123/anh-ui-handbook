@@ -90,6 +90,17 @@ python tools/build_single.py             # 重新打包手机用的单文件版
 node tools/mock-sync-server.js 5181
 ```
 
+## 把改动推回 GitHub
+
+**双击 `push-to-github.cmd`** 即可：它会自动提交本地改动、启动网络隧道、推送到
+`CJZSH-123/anh-ui-handbook`。第一次运行会要求粘贴一次 GitHub 令牌，
+令牌保存在 `token.txt`（已在 `.gitignore` 里，不会上传）。
+
+> 这台机器解析 `github.com` 得到的是连不通的地址（浏览器开了安全 DNS 所以不受影响）。
+> `tools/pin-github-proxy.js` 是一个只监听本机的小隧道，把 git 的连接转到能连通的
+> GitHub 入口 IP，不修改任何系统设置。如果哪天推送报网络错误，多半是这些入口 IP 变了，
+> 改 `pin-github-proxy.js` 里的 `CANDIDATES` 列表即可。
+
 要改内容：动 `source/toc.txt`（目录）或 `source/supplements/`（补充材料），
 再跑一次 `tools/build_data.py` 即可。
 

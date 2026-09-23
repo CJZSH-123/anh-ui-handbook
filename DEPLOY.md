@@ -6,8 +6,13 @@
 
 ## 一、先把代码传到 GitHub
 
-本地已经有一次提交（分支 `main`）。在 GitHub 上新建一个 **Public** 仓库（不要勾选任何初始化文件），
-然后：
+本地已经有提交（分支 `main`），仓库地址是 `https://github.com/CJZSH-123/anh-ui-handbook`。
+
+**以后更新内容**：改完文件后双击项目根目录的 `push-to-github.cmd`，
+它会自动提交、启动网络隧道并推送。第一次运行需要粘贴一次 GitHub 令牌，
+之后会记住在 `token.txt`（不会上传）。
+
+如果是在别的机器上，或者想手动推送：
 
 ```
 git remote add origin https://github.com/你的用户名/仓库名.git
