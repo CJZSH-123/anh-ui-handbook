@@ -42,6 +42,8 @@ function dial(port, done) {
     const ip = ips[index++];
     const socket = net.connect(port, ip);
     const startedAt = Date.now();
+    let bytes = 0;
+    socket.on("data", (chunk) => { bytes += chunk.length; });
     const timer = setTimeout(() => {
       socket.destroy();
       attempt();
@@ -57,8 +59,8 @@ function dial(port, done) {
       attempt();
     });
     socket.once("close", () => {
-      // 连上后 5 秒内就断开，说明这个入口不稳，先跳过它
-      if (Date.now() - startedAt < 5000) {
+      // 连上后很快就断、而且几乎没传数据，才算这个入口不稳（传过数据的连接属于正常结束）
+      if (Date.now() - startedAt < 5000 && bytes < 1024) {
         badUntil.set(ip, Date.now() + 60000);
         if (pinned === ip) pinned = null;
       }

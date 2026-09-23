@@ -148,6 +148,7 @@ async function main() {
       "-c", "credential.helper=",
       "-c", "http.proxy=http://127.0.0.1:" + PORT,
       "-c", "http.version=HTTP/1.1",
+      "-c", "http.sslBackend=openssl",   // schannel 在这条线路上常被中途掐断
       "push", url, "main:refs/heads/main",
     ], { capture: true });
     if (push.code === 0) break;
