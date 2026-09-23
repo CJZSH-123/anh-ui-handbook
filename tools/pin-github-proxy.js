@@ -28,7 +28,14 @@ function dial(port, done) {
   let index = 0;
 
   const attempt = () => {
-    if (index >= ips.length) return done(null);
+    if (index >= ips.length) {
+      // 记住的那个入口失效了：清掉缓存，下一轮重新从候选列表里挑
+      if (pinned) {
+        pinned = null;
+        return dial(port, done);
+      }
+      return done(null);
+    }
     const ip = ips[index++];
     const socket = net.connect(port, ip);
     const timer = setTimeout(() => {
@@ -44,6 +51,9 @@ function dial(port, done) {
       clearTimeout(timer);
       socket.destroy();
       attempt();
+    });
+    socket.once("close", () => {
+      if (pinned === ip) pinned = null;
     });
   };
 
