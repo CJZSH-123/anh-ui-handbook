@@ -13,6 +13,7 @@ const net = require("node:net");
 
 // 按顺序尝试，用第一个能连上的（连上后会记住，后续复用）
 const CANDIDATES = [
+  "20.205.243.166",
   "140.82.113.3",
   "140.82.114.3",
   "20.27.177.113",
@@ -22,14 +23,16 @@ const CANDIDATES = [
 
 const PORT = Number(process.argv[2] || 8899);
 let pinned = null;
+const badUntil = new Map();   // 连上后很快断掉的入口，先晾一会儿
 
 function dial(port, done) {
-  const ips = pinned ? [pinned] : CANDIDATES;
+  const now = Date.now();
+  const usable = CANDIDATES.filter((ip) => (badUntil.get(ip) || 0) < now);
+  const ips = pinned ? [pinned].concat(usable.filter((ip) => ip !== pinned)) : (usable.length ? usable : CANDIDATES);
   let index = 0;
 
   const attempt = () => {
     if (index >= ips.length) {
-      // 记住的那个入口失效了：清掉缓存，下一轮重新从候选列表里挑
       if (pinned) {
         pinned = null;
         return dial(port, done);
@@ -38,6 +41,7 @@ function dial(port, done) {
     }
     const ip = ips[index++];
     const socket = net.connect(port, ip);
+    const startedAt = Date.now();
     const timer = setTimeout(() => {
       socket.destroy();
       attempt();
@@ -53,7 +57,11 @@ function dial(port, done) {
       attempt();
     });
     socket.once("close", () => {
-      if (pinned === ip) pinned = null;
+      // 连上后 5 秒内就断开，说明这个入口不稳，先跳过它
+      if (Date.now() - startedAt < 5000) {
+        badUntil.set(ip, Date.now() + 60000);
+        if (pinned === ip) pinned = null;
+      }
     });
   };
 
@@ -61,6 +69,18 @@ function dial(port, done) {
 }
 
 const server = http.createServer((req, res) => {
+  if (req.url === "/reset") {
+    pinned = null;
+    badUntil.clear();
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("reset");
+    return;
+  }
+  if (req.url === "/status") {
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ pinned, bad: Array.from(badUntil.keys()) }));
+    return;
+  }
   res.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
   res.end("只支持 CONNECT 隧道");
 });

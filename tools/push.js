@@ -83,6 +83,21 @@ async function ensureTunnel() {
   return false;
 }
 
+function resetTunnel() {
+  return new Promise((resolve) => {
+    const req = httpGet("http://127.0.0.1:" + PORT + "/reset", () => resolve(true));
+    req.on("error", () => resolve(false));
+  });
+}
+
+function httpGet(url, done) {
+  const request = require("node:http").get(url, (res) => {
+    res.resume();
+    res.on("end", () => done(true));
+  });
+  return request;
+}
+
 async function main() {
   console.log("");
   console.log("  推送本地改动到 GitHub：" + GH_REPO);
@@ -125,16 +140,29 @@ async function main() {
 
   console.log("  正在推送…");
   const url = "https://" + GH_USER + ":" + token + "@github.com/" + GH_REPO + ".git";
-  const push = run(git, [
-    "-c", "credential.helper=",
-    "-c", "http.proxy=http://127.0.0.1:" + PORT,
-    "push", url, "main:refs/heads/main",
-  ], { capture: true });
 
-  if (push.code !== 0) {
+  // 到 GitHub 的线路会时好时坏，失败就换一个入口重试几次
+  let push = null;
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    push = run(git, [
+      "-c", "credential.helper=",
+      "-c", "http.proxy=http://127.0.0.1:" + PORT,
+      "-c", "http.version=HTTP/1.1",
+      "push", url, "main:refs/heads/main",
+    ], { capture: true });
+    if (push.code === 0) break;
+    const text = (push.err || "") + (push.out || "");
+    const networky = /unable to access|Connection|timed out|schannel|CONNECT|reset|Could not/i.test(text);
+    if (!networky || attempt === 4) break;
+    console.log("  第 " + attempt + " 次失败（网络原因），换入口重试…");
+    await resetTunnel();
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+
+  if (!push || push.code !== 0) {
     console.log("  推送失败：");
-    console.log("  " + (push.err || push.out).replace(url, "<repo>"));
-    console.log("  常见原因：令牌过期或被删、网络不通。重新生成令牌后删除 token.txt 再运行一次。");
+    console.log("  " + ((push && (push.err || push.out)) || "未知原因").split(url).join("<repo>"));
+    console.log("  常见原因：线路不稳、令牌过期或被删。稍后再运行一次通常就好了。");
     return 1;
   }
 
