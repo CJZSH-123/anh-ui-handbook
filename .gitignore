@@ -12,3 +12,7 @@ Desktop.ini
 # Python 缓存
 __pycache__/
 *.pyc
+
+# 存放 GitHub 令牌的本地文件（只在本机用，绝不上传）
+token.txt
+.token.txt
